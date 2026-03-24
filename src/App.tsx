@@ -12,6 +12,11 @@ import './i18n';
 
 const Home = lazy(() => import('./pages/Home'));
 const PlatformPage = lazy(() => import('./pages/PlatformPage'));
+const AudioPlatformPage = lazy(() => import('./pages/AudioPlatformPage'));
+const VideoCategory = lazy(() => import('./pages/VideoCategory'));
+const AudioCategory = lazy(() => import('./pages/AudioCategory'));
+const WatermarkFreePage = lazy(() => import('./pages/WatermarkFreePage'));
+const RegionPage = lazy(() => import('./pages/RegionPage'));
 const BlogIndex = lazy(() => import('./pages/BlogIndex'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
 const About = lazy(() => import('./pages/About'));
@@ -39,15 +44,38 @@ const App: React.FC = () => (
           <Suspense fallback={<Spinner />}>
             <Routes>
               <Route path="/" element={<Home />} />
+              
+              {/* Category landing pages */}
+              <Route path="/video-downloader" element={<VideoCategory />} />
+              <Route path="/audio-downloader" element={<AudioCategory />} />
+              <Route path="/watermark-free-downloader" element={<WatermarkFreePage />} />
+              
+              {/* Region pages */}
+              <Route path="/download/china" element={<RegionPage />} />
+              <Route path="/download/india" element={<RegionPage />} />
+              <Route path="/download/russia" element={<RegionPage />} />
+              <Route path="/download/korea" element={<RegionPage />} />
+              <Route path="/download/turkey" element={<RegionPage />} />
+              
+              {/* Platform pages */}
               <Route path="/download/:platform" element={<PlatformPage />} />
+              <Route path="/audio/:platform" element={<AudioPlatformPage />} />
+              
+              {/* pSEO routes */}
               <Route path="/:lang/download/:platform" element={<PlatformPage />} />
+              <Route path="/:lang/audio/:platform" element={<AudioPlatformPage />} />
+              
+              {/* Content */}
               <Route path="/blog" element={<BlogIndex />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              
+              {/* Static pages */}
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/sitemap" element={<SitemapPage />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

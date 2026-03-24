@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Globe, ChevronDown } from 'lucide-react';
-import { platforms } from '@/lib/platforms';
+import { Menu, X, Globe, ChevronDown, Download } from 'lucide-react';
+import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getWatermarkFreePlatforms, getVideoPlatformsByRegion } from '@/data/platforms';
 import { supportedLanguages } from '@/i18n';
+
+const musicIds = ['spotify','apple-music','soundcloud','deezer','tidal','bandcamp','audiomack'];
+const podcastIds = ['apple-podcasts','castbox','audioboom','acast','spreaker','simplecast'];
+const regionalAudioIds = ['jiosaavn','gaana','zingmp3','nhaccuatui'];
 
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [platformsOpen, setPlatformsOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -23,46 +28,114 @@ const Navbar: React.FC = () => {
     setLangOpen(false);
   };
 
+  const popularVideo = getPopularVideoPlatforms().slice(0, 9);
+  const watermarkFree = getWatermarkFreePlatforms();
+  const chinaP = getVideoPlatformsByRegion('china');
+  const indiaP = getVideoPlatformsByRegion('india');
+  const russiaP = getVideoPlatformsByRegion('russia');
+  const koreaP = getVideoPlatformsByRegion('korea');
+
+  const musicPlatforms = AUDIO_PLATFORMS.filter(p => musicIds.includes(p.id));
+  const podcastPlatforms = AUDIO_PLATFORMS.filter(p => podcastIds.includes(p.id));
+  const regionalAudio = AUDIO_PLATFORMS.filter(p => regionalAudioIds.includes(p.id));
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass border-b border-foreground/5' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <span className="font-orbitron font-bold text-xl bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">SMVD</span>
-          <span className="text-xs text-muted-foreground hidden sm:block">Video Downloader</span>
+          <span className="text-xs text-muted-foreground hidden lg:block">Video & Audio Downloader</span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm text-foreground/70 hover:text-foreground transition-colors">{t('nav_home')}</Link>
-          
-          <div className="relative" onMouseEnter={() => setPlatformsOpen(true)} onMouseLeave={() => setPlatformsOpen(false)}>
-            <button className="text-sm text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1">
-              {t('nav_platforms')} <ChevronDown className="w-3 h-3" />
+        <div className="hidden lg:flex items-center gap-1">
+          {/* VIDEO Dropdown */}
+          <div className="relative" onMouseEnter={() => setVideoOpen(true)} onMouseLeave={() => setVideoOpen(false)}>
+            <button className="px-3 py-2 text-sm text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1">
+              📹 Video <ChevronDown className="w-3 h-3" />
             </button>
-            {platformsOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 glass p-4 grid grid-cols-3 gap-2 min-w-[360px]">
-                {platforms.map(p => (
-                  <Link key={p.id} to={`/download/${p.id}`} className="text-sm text-foreground/70 hover:text-foreground px-3 py-2 rounded-lg hover:bg-foreground/5 transition-colors whitespace-nowrap">
-                    {p.name}
-                  </Link>
-                ))}
+            {videoOpen && (
+              <div className="absolute top-full left-0 mt-1 glass p-5 min-w-[520px] grid grid-cols-3 gap-4 rounded-xl border border-foreground/10">
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Popular</h4>
+                  {popularVideo.map(p => (
+                    <Link key={p.id} to={`/download/${p.slug}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                      {p.name}
+                    </Link>
+                  ))}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Watermark-Free</h4>
+                  {watermarkFree.map(p => (
+                    <Link key={p.id} to={`/download/${p.slug}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors">
+                      <span className="w-2 h-2 rounded-full bg-green-400" />
+                      {p.name}
+                    </Link>
+                  ))}
+                  <Link to="/watermark-free-downloader" className="text-xs text-neon-cyan mt-2 block px-2">All Watermark-Free →</Link>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">By Region</h4>
+                  <Link to="/download/china" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇨🇳 China ({chinaP.length})</Link>
+                  <Link to="/download/india" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇮🇳 India ({indiaP.length})</Link>
+                  <Link to="/download/russia" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇷🇺 Russia ({russiaP.length})</Link>
+                  <Link to="/download/korea" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇰🇷 Korea ({koreaP.length})</Link>
+                  <Link to="/video-downloader" className="text-xs text-neon-cyan mt-2 block px-2">All Platforms →</Link>
+                </div>
               </div>
             )}
           </div>
-          
-          <Link to="/blog" className="text-sm text-foreground/70 hover:text-foreground transition-colors">{t('nav_blog')}</Link>
-          <Link to="/about" className="text-sm text-foreground/70 hover:text-foreground transition-colors">{t('nav_about')}</Link>
+
+          {/* AUDIO Dropdown */}
+          <div className="relative" onMouseEnter={() => setAudioOpen(true)} onMouseLeave={() => setAudioOpen(false)}>
+            <button className="px-3 py-2 text-sm text-foreground/70 hover:text-foreground transition-colors flex items-center gap-1">
+              🎵 Audio <ChevronDown className="w-3 h-3" />
+            </button>
+            {audioOpen && (
+              <div className="absolute top-full left-0 mt-1 glass p-5 min-w-[440px] grid grid-cols-3 gap-4 rounded-xl border border-foreground/10">
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Music</h4>
+                  {musicPlatforms.map(p => (
+                    <Link key={p.id} to={`/audio/${p.slug}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                      {p.name}
+                    </Link>
+                  ))}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Podcasts</h4>
+                  {podcastPlatforms.map(p => (
+                    <Link key={p.id} to={`/audio/${p.slug}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                      {p.name}
+                    </Link>
+                  ))}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Regional</h4>
+                  {regionalAudio.map(p => (
+                    <Link key={p.id} to={`/audio/${p.slug}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                      {p.name}
+                    </Link>
+                  ))}
+                  <Link to="/audio-downloader" className="text-xs text-neon-cyan mt-2 block px-2">All Audio →</Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Link to="/blog" className="px-3 py-2 text-sm text-foreground/70 hover:text-foreground transition-colors">{t('nav_blog')}</Link>
+          <Link to="/about" className="px-3 py-2 text-sm text-foreground/70 hover:text-foreground transition-colors">{t('nav_about')}</Link>
         </div>
 
-        {/* Right side */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-foreground/70 hover:text-foreground">
               <Globe className="w-4 h-4" />
             </button>
             {langOpen && (
-              <div className="absolute right-0 top-full mt-2 glass p-2 max-h-64 overflow-y-auto min-w-[180px]">
+              <div className="absolute right-0 top-full mt-2 glass p-2 max-h-64 overflow-y-auto min-w-[180px] rounded-xl border border-foreground/10">
                 {supportedLanguages.map(l => (
                   <button key={l.code} onClick={() => changeLang(l.code)}
                     className={`w-full text-left text-sm px-3 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors ${i18n.language === l.code ? 'text-neon-cyan' : 'text-foreground/70'}`}>
@@ -72,29 +145,41 @@ const Navbar: React.FC = () => {
               </div>
             )}
           </div>
-          <Link to="/" className="neon-btn px-4 py-2 text-sm">{t('nav_try')}</Link>
+          <Link to="/" className="neon-btn px-4 py-2 text-sm flex items-center gap-1.5">
+            <Download className="w-3.5 h-3.5" />
+            Download Now
+          </Link>
         </div>
 
-        {/* Mobile menu toggle */}
-        <button className="md:hidden text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="lg:hidden text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 glass z-40 p-6 flex flex-col gap-4 overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 top-16 glass z-40 p-6 flex flex-col gap-4 overflow-y-auto">
           <Link to="/" onClick={() => setMenuOpen(false)} className="text-lg text-foreground/80 hover:text-foreground">{t('nav_home')}</Link>
-          <div className="text-lg text-foreground/50 font-orbitron text-sm mt-2">{t('nav_platforms')}</div>
-          <div className="grid grid-cols-2 gap-2">
-            {platforms.map(p => (
-              <Link key={p.id} to={`/download/${p.id}`} onClick={() => setMenuOpen(false)} className="text-sm text-foreground/70 hover:text-foreground py-1">
-                {p.name}
-              </Link>
+          
+          <div className="text-sm font-orbitron text-neon-cyan font-bold mt-2">📹 Video Platforms</div>
+          <div className="grid grid-cols-2 gap-1">
+            {popularVideo.map(p => (
+              <Link key={p.id} to={`/download/${p.slug}`} onClick={() => setMenuOpen(false)} className="text-sm text-foreground/70 hover:text-foreground py-1">{p.name}</Link>
             ))}
           </div>
-          <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-lg text-foreground/80 hover:text-foreground">{t('nav_blog')}</Link>
+          <Link to="/video-downloader" onClick={() => setMenuOpen(false)} className="text-sm text-neon-cyan">All Video Platforms →</Link>
+
+          <div className="text-sm font-orbitron text-neon-cyan font-bold mt-2">🎵 Audio Platforms</div>
+          <div className="grid grid-cols-2 gap-1">
+            {musicPlatforms.slice(0, 6).map(p => (
+              <Link key={p.id} to={`/audio/${p.slug}`} onClick={() => setMenuOpen(false)} className="text-sm text-foreground/70 hover:text-foreground py-1">{p.name}</Link>
+            ))}
+          </div>
+          <Link to="/audio-downloader" onClick={() => setMenuOpen(false)} className="text-sm text-neon-cyan">All Audio Platforms →</Link>
+
+          <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-lg text-foreground/80 hover:text-foreground mt-2">{t('nav_blog')}</Link>
           <Link to="/about" onClick={() => setMenuOpen(false)} className="text-lg text-foreground/80 hover:text-foreground">{t('nav_about')}</Link>
+
           <div className="mt-4 border-t border-foreground/10 pt-4">
             <div className="text-sm text-foreground/50 mb-2">Language</div>
             <div className="grid grid-cols-2 gap-1">
@@ -106,6 +191,10 @@ const Navbar: React.FC = () => {
               ))}
             </div>
           </div>
+
+          <Link to="/" onClick={() => setMenuOpen(false)} className="neon-btn px-4 py-3 text-sm text-center mt-4 flex items-center justify-center gap-2">
+            <Download className="w-4 h-4" /> Download Now
+          </Link>
         </div>
       )}
     </nav>
