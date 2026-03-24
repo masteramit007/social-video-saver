@@ -13,6 +13,7 @@ import './i18n';
 const Home = lazy(() => import('./pages/Home'));
 const PlatformPage = lazy(() => import('./pages/PlatformPage'));
 const AudioPlatformPage = lazy(() => import('./pages/AudioPlatformPage'));
+const PSEOPage = lazy(() => import('./pages/PSEOPage'));
 const VideoCategory = lazy(() => import('./pages/VideoCategory'));
 const AudioCategory = lazy(() => import('./pages/AudioCategory'));
 const WatermarkFreePage = lazy(() => import('./pages/WatermarkFreePage'));
@@ -61,9 +62,9 @@ const App: React.FC = () => (
               <Route path="/download/:platform" element={<PlatformPage />} />
               <Route path="/audio/:platform" element={<AudioPlatformPage />} />
               
-              {/* pSEO routes */}
-              <Route path="/:lang/download/:platform" element={<PlatformPage />} />
-              <Route path="/:lang/audio/:platform" element={<AudioPlatformPage />} />
+              {/* pSEO routes — all 20 languages */}
+              <Route path="/:lang/download/:platform" element={<PSEOPage />} />
+              <Route path="/:lang/audio/:platform" element={<PSEOPage />} />
               
               {/* Content */}
               <Route path="/blog" element={<BlogIndex />} />

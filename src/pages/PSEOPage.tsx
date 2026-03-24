@@ -5,7 +5,7 @@ import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
 import { VIDEO_PLATFORMS, AUDIO_PLATFORMS } from '@/data/platforms';
-import { PSEO_LANGUAGES, PSEO_VIDEO_PLATFORMS, PSEO_AUDIO_PLATFORMS } from '@/data/pseoConfig';
+import { PSEO_LANGUAGES } from '@/data/pseoConfig';
 import { getPlatformSeoTitle, getPlatformSeoDescription, getPlatformSchemaDescription, PLATFORM_KEYWORDS } from '@/data/keywords';
 import { supportedLanguages } from '@/i18n';
 
