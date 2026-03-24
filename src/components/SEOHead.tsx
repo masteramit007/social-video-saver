@@ -12,7 +12,7 @@ interface SEOHeadProps {
   jsonLd?: object;
 }
 
-const SITE = 'https://socialmediavideodownloader.com';
+const SITE = 'https://socialmediavideodownload.com';
 
 const SEOHead: React.FC<SEOHeadProps> = ({
   title,
@@ -23,7 +23,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   hreflangs = [],
   jsonLd,
 }) => {
-  const fullTitle = `${title} | SocialMediaVideoDownloader.com`;
+  const fullTitle = `${title} | SocialMediaVideoDownload.com`;
   const canonicalUrl = canonical || SITE;
 
   return (
@@ -37,7 +37,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:image" content={ogImage} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="SocialMediaVideoDownloader" />
+      <meta property="og:site_name" content="SocialMediaVideoDownload" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
