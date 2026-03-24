@@ -4,16 +4,16 @@ import { useTranslation } from 'react-i18next';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
-import { VIDEO_PLATFORMS } from '@/data/platforms';
-import { PSEO_LANGUAGES } from '@/data/pseoConfig';
-import { PLATFORM_KEYWORDS, getPlatformSchemaDescription } from '@/data/keywords';
+import { VIDEO_PLATFORMS, AUDIO_PLATFORMS } from '@/data/platforms';
+import { PSEO_LANGUAGES, PSEO_VIDEO_PLATFORMS, PSEO_AUDIO_PLATFORMS } from '@/data/pseoConfig';
+import { getPlatformSeoTitle, getPlatformSeoDescription, getPlatformSchemaDescription, PLATFORM_KEYWORDS } from '@/data/keywords';
 import { supportedLanguages } from '@/i18n';
 
 const SITE = 'https://socialmediavideodownload.com';
 
-const PlatformPage: React.FC = () => {
-  const { platform: platformId, lang } = useParams<{ platform: string; lang?: string }>();
-  const { t, i18n } = useTranslation();
+const PSEOPage: React.FC = () => {
+  const { platform: platformId, lang } = useParams<{ platform: string; lang: string }>();
+  const { i18n, t } = useTranslation();
 
   React.useEffect(() => {
     if (lang && supportedLanguages.some(l => l.code === lang)) {
@@ -21,30 +21,37 @@ const PlatformPage: React.FC = () => {
     }
   }, [lang, i18n]);
 
-  const platform = VIDEO_PLATFORMS.find(p => p.slug === platformId || p.id === platformId);
+  const isAudioRoute = window.location.pathname.includes('/audio/');
+  const allPlatforms = isAudioRoute ? AUDIO_PLATFORMS : VIDEO_PLATFORMS;
+  const platform = allPlatforms.find(p => p.slug === platformId || p.id === platformId);
+
   if (!platform) return <div className="relative z-10 pt-24 text-center text-foreground">Platform not found</div>;
 
   const currentLang = lang || 'en';
-  const canonical = lang ? `${SITE}/${lang}/download/${platform.slug}` : `${SITE}/download/${platform.slug}`;
-  const hreflangs = [
-    ...PSEO_LANGUAGES.map(l => ({ lang: l.code, url: `${SITE}/${l.code}/download/${platform.slug}` })),
-    { lang: 'x-default', url: `${SITE}/download/${platform.slug}` },
-  ];
+  const langConfig = PSEO_LANGUAGES.find(l => l.code === currentLang);
+  const type = platform.category === 'audio' ? 'audio' : 'video';
+  const basePath = type === 'audio' ? 'audio' : 'download';
+  const canonical = `${SITE}/${currentLang}/${basePath}/${platform.slug}`;
+  const englishCanonical = `${SITE}/${basePath}/${platform.slug}`;
 
-  const keywords = PLATFORM_KEYWORDS[platform.id];
-  const seoTitle = keywords?.seoTitle || (platform.supportsWatermarkFree
-    ? `${platform.name} Downloader — No Watermark Free 2025`
-    : `${platform.name} Video Downloader — Free HD Download 2025`);
-  const seoDescription = keywords?.seoDescription || platform.description;
+  const hreflangs = PSEO_LANGUAGES.map(l => ({
+    lang: l.code,
+    url: `${SITE}/${l.code}/${basePath}/${platform.slug}`,
+  }));
+  hreflangs.push({ lang: 'x-default', url: englishCanonical });
+
+  const seoTitle = getPlatformSeoTitle(platform.id, currentLang) || `${platform.name} Downloader — Free ${type === 'audio' ? 'MP3' : 'HD'} 2025`;
+  const seoDescription = getPlatformSeoDescription(platform.id, currentLang, type, platform.name);
   const schemaDesc = getPlatformSchemaDescription(platform.id);
-  const h2s = keywords?.h2s || [];
+  const keywords = PLATFORM_KEYWORDS[platform.id];
+  const isWmFree = 'supportsWatermarkFree' in platform && platform.supportsWatermarkFree;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'SoftwareApplication',
-        name: `${platform.name} Video Downloader`,
+        name: `${platform.name} ${type === 'audio' ? '' : 'Video '}Downloader`,
         applicationCategory: 'MultimediaApplication',
         operatingSystem: 'Web',
         description: schemaDesc || platform.description,
@@ -62,29 +69,16 @@ const PlatformPage: React.FC = () => {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
-          { '@type': 'ListItem', position: 2, name: 'Video Downloader', item: `${SITE}/video-downloader` },
+          { '@type': 'ListItem', position: 2, name: type === 'audio' ? 'Audio Downloader' : 'Video Downloader', item: `${SITE}/${type === 'audio' ? 'audio' : 'video'}-downloader` },
           { '@type': 'ListItem', position: 3, name: `${platform.name} Downloader`, item: canonical },
         ],
       },
     ],
   };
 
-  const isYouTube = platform.id === 'youtube';
-  const related = VIDEO_PLATFORMS.filter(p => p.id !== platform.id && p.id !== 'youtube' && p.category === platform.category).slice(0, 3);
-
-  // Relevant blog post link
-  const blogLinks: Record<string, string> = {
-    tiktok: '/blog/tiktok-video-downloader-no-watermark-2025',
-    instagram: '/blog/instagram-reels-downloader-guide',
-    twitter: '/blog/twitter-video-downloader-iphone-android',
-    facebook: '/blog/facebook-video-downloader-private-public',
-    reddit: '/blog/reddit-video-downloader-with-audio',
-    bilibili: '/blog/bilibili-video-downloader-international',
-    twitch: '/blog/how-to-download-twitch-clips-vods-free',
-    vk: '/blog/vk-video-downloader-russian-social-media',
-    telegram: '/blog/download-telegram-videos-step-by-step',
-    bluesky: '/blog/bluesky-video-downloader-twitter-alternative',
-  };
+  const related = allPlatforms.filter(p => p.id !== platform.id).slice(0, 3);
+  const categoryLink = type === 'audio' ? '/audio-downloader' : '/video-downloader';
+  const h2s = keywords?.h2s || [];
 
   return (
     <>
@@ -97,32 +91,35 @@ const PlatformPage: React.FC = () => {
         jsonLd={jsonLd}
       />
 
-      <div className="relative z-10 pt-24 pb-16 px-4" dir={currentLang === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="relative z-10 pt-24 pb-16 px-4" dir={langConfig?.dir || 'ltr'}>
         <div className="max-w-4xl mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6" aria-label="Breadcrumb">
             <Link to="/" className="hover:text-foreground transition-colors">{t('nav_home')}</Link>
             <span>/</span>
-            <Link to="/video-downloader" className="hover:text-foreground transition-colors">Video Downloader</Link>
+            <Link to={categoryLink} className="hover:text-foreground transition-colors">
+              {type === 'audio' ? 'Audio Downloader' : 'Video Downloader'}
+            </Link>
             <span>/</span>
             <span>{platform.name}</span>
           </nav>
 
-          {/* Hero with keyword-rich content */}
+          {/* Hero */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" style={{ backgroundColor: `${platform.color}20`, color: platform.color }}>
-                {platform.name[0]}
+                {type === 'audio' ? '🎵' : platform.name[0]}
               </div>
-              {isYouTube && <span className="px-2 py-1 text-xs rounded-full bg-neon-pink/20 text-neon-pink font-bold">{t('badge_extension')}</span>}
-              {platform.supportsWatermarkFree && <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400 font-bold">Watermark-Free ✓</span>}
-              <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-bold">📹 Video</span>
+              {isWmFree && <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400 font-bold">No Watermark ✓</span>}
+              <span className={`px-2 py-1 text-xs rounded-full font-bold ${type === 'audio' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                {type === 'audio' ? '🎵 Audio' : '📹 Video'}
+              </span>
             </div>
             <h1 className="font-orbitron text-2xl md:text-4xl font-bold neon-text mb-3">
-              {keywords?.h1 || `${platform.name} Video Downloader`}
+              {keywords?.h1 || `${platform.name} ${type === 'audio' ? '' : 'Video '}Downloader`}
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              {seoDescription}
+              {platform.description} Free, no login required. Works on iPhone, Android and PC in 2025.
             </p>
           </div>
 
@@ -130,10 +127,10 @@ const PlatformPage: React.FC = () => {
 
           <AdSlot format="responsive" />
 
-          {/* How to Download — keyword-rich H2 */}
+          {/* How to Download */}
           <section className="mt-16">
             <h2 className="font-orbitron text-xl font-bold neon-text-purple mb-6">
-              {h2s[0] || `How to Download ${platform.name} Videos`}
+              {h2s[0] || `How to Download ${platform.name} ${type === 'audio' ? 'Music' : 'Videos'}`}
             </h2>
             <div className="space-y-3">
               {platform.howTo.map((step, i) => (
@@ -148,7 +145,7 @@ const PlatformPage: React.FC = () => {
           {/* Features */}
           <section className="mt-12">
             <h2 className="font-orbitron text-xl font-bold neon-text mb-6">
-              {h2s[3] || `${platform.name} Video Download Features`}
+              {h2s[3] || `${platform.name} Download Features`}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {platform.features.map((f, i) => (
@@ -160,29 +157,23 @@ const PlatformPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Device-specific section for mobile SEO keywords */}
+          {/* Device section */}
           <section className="mt-12">
             <h2 className="font-orbitron text-xl font-bold neon-text-purple mb-6">
-              Download {platform.name} Videos on iPhone & Android
+              {h2s[2] || `Download ${platform.name} on iPhone & Android`}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="glass p-4">
-                <h3 className="font-orbitron text-sm font-bold mb-2">📱 iPhone / iOS</h3>
-                <p className="text-xs text-muted-foreground">
-                  Use our {platform.name} downloader for iPhone — open Safari, paste the video URL, and tap Download. The {platform.name} video saves directly to your Files app. No app needed, completely free.
-                </p>
+                <h3 className="font-orbitron text-sm font-bold mb-2">📱 iPhone</h3>
+                <p className="text-xs text-muted-foreground">Open Safari, paste the {platform.name} URL, tap Download. The file saves to your Files app automatically. No app installation needed.</p>
               </div>
               <div className="glass p-4">
                 <h3 className="font-orbitron text-sm font-bold mb-2">🤖 Android</h3>
-                <p className="text-xs text-muted-foreground">
-                  Our {platform.name} downloader for Android works in Chrome and all browsers. Paste the {platform.name} link, tap Download, and save to your gallery. Free, fast, no watermark.
-                </p>
+                <p className="text-xs text-muted-foreground">Works in Chrome and all Android browsers. Paste the link, tap Download, and the file saves to your Downloads folder instantly.</p>
               </div>
               <div className="glass p-4">
-                <h3 className="font-orbitron text-sm font-bold mb-2">💻 Desktop</h3>
-                <p className="text-xs text-muted-foreground">
-                  Download {platform.name} videos on PC or Mac — no software installation required. Our online {platform.name} downloader works in any browser. Just paste and download in HD.
-                </p>
+                <h3 className="font-orbitron text-sm font-bold mb-2">💻 PC / Mac</h3>
+                <p className="text-xs text-muted-foreground">Fully browser-based — no software to install. Works on Windows, Mac, Linux, and Chromebooks. Just paste the URL and download.</p>
               </div>
             </div>
           </section>
@@ -209,13 +200,13 @@ const PlatformPage: React.FC = () => {
 
           {/* Related platforms */}
           <section className="mt-12">
-            <h2 className="font-orbitron text-lg font-bold mb-4">Also Try These Video Downloaders</h2>
+            <h2 className="font-orbitron text-lg font-bold mb-4">Also Download From</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {related.map(p => (
-                <Link key={p.id} to={`/download/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
+                <Link key={p.id} to={`/${basePath}/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
-                      {p.name[0]}
+                      {type === 'audio' ? '🎵' : p.name[0]}
                     </div>
                     <span className="font-orbitron text-sm font-bold">{p.name}</span>
                   </div>
@@ -225,21 +216,12 @@ const PlatformPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Blog link */}
-          {blogLinks[platform.id] && (
-            <div className="mt-6 glass p-4">
-              <Link to={blogLinks[platform.id]} className="text-sm text-neon-cyan hover:underline">
-                📖 Read our complete guide: How to download {platform.name} videos →
-              </Link>
-            </div>
-          )}
-
-          {/* Language variants for internal linking */}
+          {/* Language variants */}
           <section className="mt-8">
             <h3 className="font-orbitron text-sm font-bold mb-3 text-muted-foreground">Available in other languages:</h3>
             <div className="flex flex-wrap gap-2">
               {PSEO_LANGUAGES.filter(l => l.code !== currentLang).slice(0, 10).map(l => (
-                <Link key={l.code} to={`/${l.code}/download/${platform.slug}`}
+                <Link key={l.code} to={`/${l.code}/${basePath}/${platform.slug}`}
                   className="glass px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors">
                   {l.native}
                 </Link>
@@ -248,7 +230,9 @@ const PlatformPage: React.FC = () => {
           </section>
 
           <div className="mt-8 text-center">
-            <Link to="/video-downloader" className="text-sm text-neon-cyan hover:underline">← View all 50+ video platforms</Link>
+            <Link to={categoryLink} className="text-sm text-neon-cyan hover:underline">
+              ← View all {type === 'audio' ? 'audio' : 'video'} platforms
+            </Link>
           </div>
         </div>
       </div>
@@ -256,4 +240,4 @@ const PlatformPage: React.FC = () => {
   );
 };
 
-export default PlatformPage;
+export default PSEOPage;
