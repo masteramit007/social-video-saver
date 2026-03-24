@@ -48,7 +48,7 @@ const Home: React.FC = () => {
     <>
       <SEOHead
         title="Download Any Social Media Video — Free, Fast, No Watermark"
-        description="Download videos from TikTok, Instagram, Twitter, Facebook, Bilibili, Reddit and 10+ platforms. Free, fast, HD quality, no watermark."
+        description="Download videos & audio from TikTok, Instagram, Twitter, Facebook, SoundCloud, Spotify and 70+ platforms. Free, fast, HD quality, no watermark."
         canonical="https://socialmediavideodownloader.com"
         jsonLd={jsonLd}
       />
