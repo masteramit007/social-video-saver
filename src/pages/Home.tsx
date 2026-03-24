@@ -5,7 +5,7 @@ import { Zap, Shield, Smartphone, Download, Globe, Eye } from 'lucide-react';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
-import { platforms } from '@/lib/platforms';
+import { platforms, getPlatformsByCategory } from '@/lib/platforms';
 
 const features = [
   { icon: Eye, titleKey: 'feature_no_watermark', descKey: 'feature_no_watermark_desc' },
@@ -19,7 +19,7 @@ const features = [
 const stats = [
   { value: '10,000,000+', labelKey: 'stat_downloads' },
   { value: '190+', labelKey: 'stat_countries' },
-  { value: '12+', labelKey: 'stat_platforms' },
+  { value: '70+', labelKey: 'stat_platforms' },
   { value: '99.9%', labelKey: 'stat_uptime' },
 ];
 
@@ -48,7 +48,7 @@ const Home: React.FC = () => {
     <>
       <SEOHead
         title="Download Any Social Media Video — Free, Fast, No Watermark"
-        description="Download videos from TikTok, Instagram, Twitter, Facebook, Bilibili, Reddit and 10+ platforms. Free, fast, HD quality, no watermark."
+        description="Download videos & audio from TikTok, Instagram, Twitter, Facebook, SoundCloud, Spotify and 70+ platforms. Free, fast, HD quality, no watermark."
         canonical="https://socialmediavideodownloader.com"
         jsonLd={jsonLd}
       />
@@ -90,26 +90,49 @@ const Home: React.FC = () => {
 
         <AdSlot format="responsive" />
 
-        {/* Platform Grid */}
+        {/* Platform Grid — Video */}
         <section className="py-16 px-4">
           <div className="container mx-auto">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-bold text-center neon-text-purple mb-10">Supported Platforms</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {platforms.map(p => (
+            <h2 className="font-orbitron text-2xl md:text-3xl font-bold text-center neon-text-purple mb-10">🎬 Video & Social Platforms</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {getPlatformsByCategory('video').map(p => (
                 <Link key={p.id} to={`/download/${p.id}`}
-                  className="glass glass-hover p-5 transition-all duration-300 block"
+                  className="glass glass-hover p-4 transition-all duration-300 block"
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${p.color}40`)}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
                       {p.name[0]}
                     </div>
-                    <h3 className="font-orbitron text-sm font-bold">{p.name}</h3>
-                    {p.id === 'youtube' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-neon-pink/20 text-neon-pink">Ext.</span>}
+                    <h3 className="font-orbitron text-xs font-bold truncate">{p.name}</h3>
+                    {p.id === 'youtube' && <span className="text-[9px] px-1 py-0.5 rounded bg-neon-pink/20 text-neon-pink shrink-0">Ext.</span>}
                   </div>
-                  <p className="text-xs text-muted-foreground">{p.description.slice(0, 80)}…</p>
-                  <span className="text-xs text-neon-cyan mt-2 block">Download →</span>
+                  <span className="text-[10px] text-neon-cyan block">Download →</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Platform Grid — Audio */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto">
+            <h2 className="font-orbitron text-2xl md:text-3xl font-bold text-center neon-text-purple mb-10">🎵 Audio & Podcast Platforms</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {getPlatformsByCategory('audio').map(p => (
+                <Link key={p.id} to={`/download/${p.id}`}
+                  className="glass glass-hover p-4 transition-all duration-300 block"
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${p.color}40`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
+                >
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
+                      {p.name[0]}
+                    </div>
+                    <h3 className="font-orbitron text-xs font-bold truncate">{p.name}</h3>
+                  </div>
+                  <span className="text-[10px] text-neon-cyan block">Download →</span>
                 </Link>
               ))}
             </div>
