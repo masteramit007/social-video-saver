@@ -19,7 +19,7 @@ const features = [
 const stats = [
   { value: '10,000,000+', labelKey: 'stat_downloads' },
   { value: '190+', labelKey: 'stat_countries' },
-  { value: '12+', labelKey: 'stat_platforms' },
+  { value: '70+', labelKey: 'stat_platforms' },
   { value: '99.9%', labelKey: 'stat_uptime' },
 ];
 
