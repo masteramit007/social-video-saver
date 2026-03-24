@@ -1,17 +1,75 @@
 const axios = require('axios');
 
 const PLATFORMS = {
-  tiktok: /tiktok\.com/,
+  tiktok: /tiktok\.com|vm\.tiktok\.com/,
+  douyin: /douyin\.com/,
+  capcut: /capcut\.com/,
+  hipi: /hipi\.co\.in/,
+  xiaohongshu: /xiaohongshu\.com|xhslink\.com/,
   instagram: /instagram\.com/,
-  twitter: /twitter\.com|x\.com/,
   facebook: /facebook\.com|fb\.watch/,
-  bilibili: /bilibili\.com/,
-  dailymotion: /dailymotion\.com/,
+  twitter: /twitter\.com|x\.com/,
+  youtube: /youtube\.com|youtu\.be/,
   reddit: /reddit\.com/,
-  rumble: /rumble\.com/,
-  vimeo: /vimeo\.com/,
   pinterest: /pinterest\.com/,
+  linkedin: /linkedin\.com/,
   snapchat: /snapchat\.com/,
+  threads: /threads\.net/,
+  bluesky: /bsky\.app/,
+  twitch: /twitch\.tv/,
+  kick: /kick\.com/,
+  rumble: /rumble\.com/,
+  dlive: /dlive\.tv/,
+  bilibili: /bilibili\.com|b23\.tv/,
+  weibo: /weibo\.com/,
+  kuaishou: /kuaishou\.com/,
+  qq: /v\.qq\.com/,
+  sohu: /sohu\.com/,
+  ixigua: /ixigua\.com/,
+  meipai: /meipai\.com/,
+  sina: /video\.sina\.com/,
+  vk: /vk\.com/,
+  ok: /ok\.ru/,
+  rutube: /rutube\.ru/,
+  afreecatv: /afreecatv\.com/,
+  chzzk: /chzzk\.naver\.com/,
+  vimeo: /vimeo\.com/,
+  dailymotion: /dailymotion\.com/,
+  telegram: /t\.me/,
+  tumblr: /tumblr\.com/,
+  ted: /ted\.com/,
+  imdb: /imdb\.com/,
+  imgur: /imgur\.com/,
+  streamable: /streamable\.com/,
+  bitchute: /bitchute\.com/,
+  '9gag': /9gag\.com/,
+  coub: /coub\.com/,
+  likee: /likee\.video/,
+  sharechat: /sharechat\.com/,
+  espn: /espn\.com/,
+  lemon8: /lemon8-app\.com/,
+  ifunny: /ifunny\.co/,
+  soundcloud: /soundcloud\.com/,
+  spotify: /spotify\.com|open\.spotify\.com/,
+  'apple-music': /music\.apple\.com/,
+  'apple-podcasts': /podcasts\.apple\.com/,
+  deezer: /deezer\.com/,
+  tidal: /tidal\.com/,
+  mixcloud: /mixcloud\.com/,
+  bandcamp: /bandcamp\.com/,
+  audiomack: /audiomack\.com/,
+  audius: /audius\.co/,
+  jiosaavn: /jiosaavn\.com/,
+  gaana: /gaana\.com/,
+  zingmp3: /zingmp3\.vn/,
+  nhaccuatui: /nhaccuatui\.com/,
+  castbox: /castbox\.fm/,
+  audioboom: /audioboom\.com/,
+  acast: /acast\.com/,
+  hearthis: /hearthis\.at/,
+  jamendo: /jamendo\.com/,
+  simplecast: /simplecast\.com/,
+  spreaker: /spreaker\.com/,
 };
 
 function detectPlatform(url) {
@@ -21,11 +79,49 @@ function detectPlatform(url) {
   return 'unknown';
 }
 
+// Layer 1: Auto Download All In One (PRIMARY - paid plan)
+async function tryAutoDownloadAPI(url) {
+  const response = await axios.get(
+    'https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink',
+    {
+      params: { url },
+      headers: {
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com'
+      },
+      timeout: 8000
+    }
+  );
+
+  if (!response.data || response.data.error) {
+    throw new Error('API returned error');
+  }
+
+  const data = response.data;
+
+  return {
+    title: data.title || 'Downloaded Media',
+    thumbnail: data.thumbnail || null,
+    duration: data.duration || null,
+    platform: data.source || 'unknown',
+    type: data.type || 'video',
+    formats: (data.medias || []).map(m => ({
+      quality: m.quality || 'HD',
+      url: m.url,
+      ext: m.extension || 'mp4',
+      size: m.size || null,
+      type: m.type || 'video'
+    })),
+    source: 'auto-download-aio',
+  };
+}
+
+// Layer 2: Self-hosted Cobalt (Railway backup)
 async function tryCobalt(url) {
   const res = await axios.post(
     process.env.COBALT_API_URL,
     { url, vCodec: 'h264', vQuality: '720', aFormat: 'mp3', isAudioOnly: false, disableMetadata: false },
-    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 6000 }
+    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 8000 }
   );
   if (res.data.status === 'stream' || res.data.status === 'redirect') {
     return {
@@ -41,84 +137,11 @@ async function tryCobalt(url) {
   throw new Error('Cobalt: no stream URL');
 }
 
-async function tryFastSaver(url) {
-  const res = await axios.get('https://fastsaverapi.com/get-info', {
-    params: { url, api_key: process.env.FASTSAVER_API_KEY },
-    timeout: 6000,
-  });
-  if (!res.data || res.data.error) throw new Error('FastSaver failed');
-  return {
-    title: res.data.title || 'Video',
-    thumbnail: res.data.thumbnail || null,
-    formats: (res.data.medias || []).map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
-    source: 'fastsaver',
-  };
-}
-
-async function tryAllDownloader(url) {
-  const res = await axios.post(
-    'https://all-downloader1.p.rapidapi.com/download',
-    `url=${encodeURIComponent(url)}`,
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'all-downloader1.p.rapidapi.com',
-      },
-      timeout: 6000,
-    }
-  );
-  if (!res.data || (!res.data.medias && !res.data.url)) throw new Error('AllDownloader failed');
-  const medias = res.data.medias || [{ url: res.data.url, quality: 'HD', extension: 'mp4' }];
-  return {
-    title: res.data.title || 'Video',
-    thumbnail: res.data.thumbnail || null,
-    formats: medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
-    source: 'alldownloader',
-  };
-}
-
-async function trySocialMediaDL(url) {
-  const res = await axios.get('https://socialmediadl.vercel.app/api/get-video-data', {
-    params: { url },
-    timeout: 6000,
-  });
-  if (!res.data || (!res.data.urls && !res.data.url)) throw new Error('SocialMediaDL failed');
-  const urls = res.data.urls || [{ url: res.data.url, quality: 'HD', ext: 'mp4' }];
-  return {
-    title: res.data.title || 'Video',
-    thumbnail: res.data.thumbnail || null,
-    formats: urls.map((u) => ({ quality: u.quality || 'HD', url: u.url || u, ext: u.ext || 'mp4' })),
-    source: 'socialmediadl',
-  };
-}
-
-async function trySocialDownloadAllInOne(url) {
-  const res = await axios.post(
-    'https://social-download-all-in-one.p.rapidapi.com/v1/social/autolink',
-    { url },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'social-download-all-in-one.p.rapidapi.com',
-      },
-      timeout: 6000,
-    }
-  );
-  if (!res.data || !res.data.medias) throw new Error('SocialDownloadAllInOne failed');
-  return {
-    title: res.data.title || 'Video',
-    thumbnail: res.data.thumbnail || null,
-    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
-    source: 'social-download-aio',
-  };
-}
-
+// Layer 3: Native platform fallbacks (free, always on)
 async function tryNativeFallback(url, platform) {
   if (platform === 'reddit') {
     const jsonUrl = url.replace(/\/?$/, '.json');
-    const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });
+    const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
     const post = res.data[0]?.data?.children[0]?.data;
     const videoUrl = post?.secure_media?.reddit_video?.fallback_url;
     if (!videoUrl) throw new Error('Reddit: no video found');
@@ -127,11 +150,11 @@ async function tryNativeFallback(url, platform) {
   if (platform === 'bilibili') {
     const bvid = url.match(/BV[\w]+/)?.[0];
     if (!bvid) throw new Error('Bilibili: no BVID');
-    const info = await axios.get(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`, { timeout: 6000 });
+    const info = await axios.get(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`, { timeout: 8000 });
     const cid = info.data?.data?.cid;
     const title = info.data?.data?.title;
     const thumb = info.data?.data?.pic;
-    const stream = await axios.get(`https://api.bilibili.com/x/player/playurl?bvid=${bvid}&cid=${cid}&qn=80`, { timeout: 6000 });
+    const stream = await axios.get(`https://api.bilibili.com/x/player/playurl?bvid=${bvid}&cid=${cid}&qn=80`, { timeout: 8000 });
     const videoUrl = stream.data?.data?.durl?.[0]?.url;
     if (!videoUrl) throw new Error('Bilibili: no stream');
     return { title: title || 'Bilibili Video', thumbnail: thumb || null, formats: [{ quality: '720p', url: videoUrl, ext: 'mp4' }], source: 'native-bilibili' };
@@ -139,7 +162,7 @@ async function tryNativeFallback(url, platform) {
   if (platform === 'dailymotion') {
     const videoId = url.match(/video\/([a-zA-Z0-9]+)/)?.[1];
     if (!videoId) throw new Error('Dailymotion: no ID');
-    const res = await axios.get(`https://api.dailymotion.com/video/${videoId}?fields=title,thumbnail_url,stream_h264_hd_url,stream_h264_url`, { timeout: 6000 });
+    const res = await axios.get(`https://api.dailymotion.com/video/${videoId}?fields=title,thumbnail_url,stream_h264_hd_url,stream_h264_url`, { timeout: 8000 });
     return {
       title: res.data.title || 'Dailymotion Video',
       thumbnail: res.data.thumbnail_url || null,
@@ -191,11 +214,8 @@ exports.handler = async (event) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
     { name: 'cobalt', fn: () => tryCobalt(url) },
-    { name: 'alldownloader', fn: () => tryAllDownloader(url) },
-    { name: 'socialmediadl', fn: () => trySocialMediaDL(url) },
-    { name: 'fastsaver', fn: () => tryFastSaver(url) },
-    { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
@@ -215,6 +235,6 @@ exports.handler = async (event) => {
   return {
     statusCode: 422,
     headers,
-    body: JSON.stringify({ error: 'Could not extract video from this URL. Try another link.', platform, debug: process.env.NODE_ENV === 'development' ? lastError : undefined }),
+    body: JSON.stringify({ error: 'Could not extract media from this URL. Try another link.', platform, debug: process.env.NODE_ENV === 'development' ? lastError : undefined }),
   };
 };
