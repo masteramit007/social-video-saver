@@ -55,18 +55,26 @@ async function tryFastSaver(url) {
   };
 }
 
-async function tryAutoDownload(url) {
-  const res = await axios.get('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', {
-    params: { url },
-    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com' },
-    timeout: 6000,
-  });
-  if (!res.data || !res.data.medias) throw new Error('AutoDownload failed');
+async function tryAllDownloader(url) {
+  const res = await axios.post(
+    'https://all-downloader1.p.rapidapi.com/download',
+    `url=${encodeURIComponent(url)}`,
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'all-downloader1.p.rapidapi.com',
+      },
+      timeout: 6000,
+    }
+  );
+  if (!res.data || (!res.data.medias && !res.data.url)) throw new Error('AllDownloader failed');
+  const medias = res.data.medias || [{ url: res.data.url, quality: 'HD', extension: 'mp4' }];
   return {
     title: res.data.title || 'Video',
     thumbnail: res.data.thumbnail || null,
-    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
-    source: 'autodownload',
+    formats: medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
+    source: 'alldownloader',
   };
 }
 
