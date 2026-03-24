@@ -162,6 +162,7 @@ exports.handler = async (event) => {
   const platform = detectPlatform(url);
   const layers = [
     { name: 'cobalt', fn: () => tryCobalt(url) },
+    { name: 'autodownload', fn: () => tryAutoDownload(url) },
     { name: 'fastsaver', fn: () => tryFastSaver(url) },
     { name: 'rapidapi', fn: () => tryRapidAPI(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
