@@ -5,7 +5,7 @@ import { Zap, Shield, Smartphone, Download, Globe, Eye } from 'lucide-react';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
-import { platforms } from '@/lib/platforms';
+import { platforms, getPlatformsByCategory } from '@/lib/platforms';
 
 const features = [
   { icon: Eye, titleKey: 'feature_no_watermark', descKey: 'feature_no_watermark_desc' },
