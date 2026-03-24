@@ -79,17 +79,17 @@ async function tryAllDownloader(url) {
 }
 
 async function tryRapidAPI(url) {
-  const res = await axios.get('https://all-social-media-video-downloader.p.rapidapi.com/v1/social/video', {
+  const res = await axios.get('https://social-media-video-downloader.p.rapidapi.com/smvd/get/all', {
     params: { url },
-    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'all-social-media-video-downloader.p.rapidapi.com' },
+    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'social-media-video-downloader.p.rapidapi.com' },
     timeout: 6000,
   });
-  if (!res.data || !res.data.medias) throw new Error('RapidAPI failed');
+  if (!res.data || !res.data.links) throw new Error('RapidAPI SMVD failed');
   return {
     title: res.data.title || 'Video',
-    thumbnail: res.data.thumbnail || null,
-    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.ext || 'mp4' })),
-    source: 'rapidapi',
+    thumbnail: res.data.picture || null,
+    formats: res.data.links.filter(l => l.link).map((l) => ({ quality: l.quality || 'HD', url: l.link, ext: 'mp4' })),
+    source: 'rapidapi-smvd',
   };
 }
 
