@@ -55,6 +55,21 @@ async function tryFastSaver(url) {
   };
 }
 
+async function tryAutoDownload(url) {
+  const res = await axios.get('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', {
+    params: { url },
+    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com' },
+    timeout: 6000,
+  });
+  if (!res.data || !res.data.medias) throw new Error('AutoDownload failed');
+  return {
+    title: res.data.title || 'Video',
+    thumbnail: res.data.thumbnail || null,
+    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
+    source: 'autodownload',
+  };
+}
+
 async function tryRapidAPI(url) {
   const res = await axios.get('https://all-social-media-video-downloader.p.rapidapi.com/v1/social/video', {
     params: { url },
