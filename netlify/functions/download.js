@@ -78,18 +78,40 @@ async function tryAllDownloader(url) {
   };
 }
 
-async function tryRapidAPI(url) {
-  const res = await axios.get('https://social-media-video-downloader.p.rapidapi.com/smvd/get/all', {
+async function trySocialMediaDL(url) {
+  const res = await axios.get('https://socialmediadl.vercel.app/api/get-video-data', {
     params: { url },
-    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'social-media-video-downloader.p.rapidapi.com' },
     timeout: 6000,
   });
-  if (!res.data || !res.data.links) throw new Error('RapidAPI SMVD failed');
+  if (!res.data || (!res.data.urls && !res.data.url)) throw new Error('SocialMediaDL failed');
+  const urls = res.data.urls || [{ url: res.data.url, quality: 'HD', ext: 'mp4' }];
   return {
     title: res.data.title || 'Video',
-    thumbnail: res.data.picture || null,
-    formats: res.data.links.filter(l => l.link).map((l) => ({ quality: l.quality || 'HD', url: l.link, ext: 'mp4' })),
-    source: 'rapidapi-smvd',
+    thumbnail: res.data.thumbnail || null,
+    formats: urls.map((u) => ({ quality: u.quality || 'HD', url: u.url || u, ext: u.ext || 'mp4' })),
+    source: 'socialmediadl',
+  };
+}
+
+async function trySocialDownloadAllInOne(url) {
+  const res = await axios.post(
+    'https://social-download-all-in-one.p.rapidapi.com/v1/social/autolink',
+    { url },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'social-download-all-in-one.p.rapidapi.com',
+      },
+      timeout: 6000,
+    }
+  );
+  if (!res.data || !res.data.medias) throw new Error('SocialDownloadAllInOne failed');
+  return {
+    title: res.data.title || 'Video',
+    thumbnail: res.data.thumbnail || null,
+    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
+    source: 'social-download-aio',
   };
 }
 
@@ -171,8 +193,9 @@ exports.handler = async (event) => {
   const layers = [
     { name: 'cobalt', fn: () => tryCobalt(url) },
     { name: 'alldownloader', fn: () => tryAllDownloader(url) },
+    { name: 'socialmediadl', fn: () => trySocialMediaDL(url) },
     { name: 'fastsaver', fn: () => tryFastSaver(url) },
-    { name: 'rapidapi-smvd', fn: () => tryRapidAPI(url) },
+    { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
