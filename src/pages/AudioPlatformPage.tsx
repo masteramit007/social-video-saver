@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
-import { VIDEO_PLATFORMS } from '@/data/platforms';
+import { AUDIO_PLATFORMS, ALL_PLATFORMS } from '@/data/platforms';
 import { supportedLanguages } from '@/i18n';
 
 const SITE = 'https://socialmediavideodownload.com';
 
-const PlatformPage: React.FC = () => {
+const AudioPlatformPage: React.FC = () => {
   const { platform: platformId, lang } = useParams<{ platform: string; lang?: string }>();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
 
   React.useEffect(() => {
     if (lang && supportedLanguages.some(l => l.code === lang)) {
@@ -19,30 +19,26 @@ const PlatformPage: React.FC = () => {
     }
   }, [lang, i18n]);
 
-  const platform = VIDEO_PLATFORMS.find(p => p.slug === platformId || p.id === platformId);
+  const platform = AUDIO_PLATFORMS.find(p => p.slug === platformId);
   if (!platform) return <div className="relative z-10 pt-24 text-center text-foreground">Platform not found</div>;
 
   const currentLang = lang || 'en';
-  const canonical = lang ? `${SITE}/${lang}/download/${platform.slug}` : `${SITE}/download/${platform.slug}`;
-  const hreflangs = supportedLanguages.map(l => ({
+  const canonical = lang ? `${SITE}/${lang}/audio/${platformId}` : `${SITE}/audio/${platformId}`;
+  const hreflangs = supportedLanguages.slice(0, 10).map(l => ({
     lang: l.code,
-    url: `${SITE}/${l.code}/download/${platform.slug}`,
+    url: `${SITE}/${l.code}/audio/${platformId}`,
   }));
-
-  const seoTitle = platform.supportsWatermarkFree
-    ? `${platform.name} Downloader — No Watermark Free 2025`
-    : `${platform.name} Video Downloader — Free HD Download 2025`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'SoftwareApplication',
-        name: `${platform.name} Video Downloader`,
+        name: `${platform.name} Downloader`,
         applicationCategory: 'MultimediaApplication',
         operatingSystem: 'Web',
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-        aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '12543' },
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.7', ratingCount: '8432' },
       },
       {
         '@type': 'FAQPage',
@@ -55,20 +51,19 @@ const PlatformPage: React.FC = () => {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
-          { '@type': 'ListItem', position: 2, name: 'Video Downloader', item: `${SITE}/video-downloader` },
+          { '@type': 'ListItem', position: 2, name: 'Audio Downloader', item: `${SITE}/audio-downloader` },
           { '@type': 'ListItem', position: 3, name: `${platform.name} Downloader`, item: canonical },
         ],
       },
     ],
   };
 
-  const isYouTube = platform.id === 'youtube';
-  const related = VIDEO_PLATFORMS.filter(p => p.id !== platform.id && p.id !== 'youtube' && p.category === platform.category).slice(0, 3);
+  const related = AUDIO_PLATFORMS.filter(p => p.id !== platformId).slice(0, 3);
 
   return (
     <>
       <SEOHead
-        title={seoTitle}
+        title={`${platform.name} Downloader — Download Music & Podcasts Free`}
         description={platform.description}
         canonical={canonical}
         lang={currentLang}
@@ -79,9 +74,9 @@ const PlatformPage: React.FC = () => {
       <div className="relative z-10 pt-24 pb-16 px-4" dir={currentLang === 'ar' ? 'rtl' : 'ltr'}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
-            <Link to="/" className="hover:text-foreground transition-colors">{t('nav_home')}</Link>
+            <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <span>/</span>
-            <Link to="/video-downloader" className="hover:text-foreground transition-colors">Video Downloader</Link>
+            <Link to="/audio-downloader" className="hover:text-foreground transition-colors">Audio Downloader</Link>
             <span>/</span>
             <span>{platform.name}</span>
           </div>
@@ -89,24 +84,22 @@ const PlatformPage: React.FC = () => {
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" style={{ backgroundColor: `${platform.color}20`, color: platform.color }}>
-                {platform.name[0]}
+                🎵
               </div>
-              {isYouTube && <span className="px-2 py-1 text-xs rounded-full bg-neon-pink/20 text-neon-pink font-bold">{t('badge_extension')}</span>}
-              {platform.supportsWatermarkFree && <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400 font-bold">Watermark-Free ✓</span>}
-              <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-bold">📹 Video</span>
+              <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-bold">🎵 Audio</span>
             </div>
             <h1 className="font-orbitron text-2xl md:text-4xl font-bold neon-text mb-3">
-              {platform.name} {platform.supportsWatermarkFree ? 'Downloader — No Watermark' : 'Video Downloader'}
+              {platform.name} Downloader
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">{platform.description}</p>
           </div>
 
-          <DownloadWidget forcePlatform={platform.id} />
+          <DownloadWidget />
 
           <AdSlot format="responsive" />
 
           <section className="mt-16">
-            <h2 className="font-orbitron text-xl font-bold neon-text-purple mb-6">{t('how_to_download')} {platform.name} Videos</h2>
+            <h2 className="font-orbitron text-xl font-bold neon-text-purple mb-6">How to Download from {platform.name}</h2>
             <div className="space-y-3">
               {platform.howTo.map((step, i) => (
                 <div key={i} className="glass p-4 flex items-start gap-4">
@@ -118,7 +111,7 @@ const PlatformPage: React.FC = () => {
           </section>
 
           <section className="mt-12">
-            <h2 className="font-orbitron text-xl font-bold neon-text mb-6">{t('features')}</h2>
+            <h2 className="font-orbitron text-xl font-bold neon-text mb-6">Features</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {platform.features.map((f, i) => (
                 <div key={i} className="glass p-4 flex items-center gap-3">
@@ -147,13 +140,13 @@ const PlatformPage: React.FC = () => {
           </section>
 
           <section className="mt-12">
-            <h2 className="font-orbitron text-lg font-bold mb-4">{t('related_platforms')}</h2>
+            <h2 className="font-orbitron text-lg font-bold mb-4">More Audio Platforms</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {related.map(p => (
-                <Link key={p.id} to={`/download/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
+                <Link key={p.id} to={`/audio/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
-                      {p.name[0]}
+                      🎵
                     </div>
                     <span className="font-orbitron text-sm font-bold">{p.name}</span>
                   </div>
@@ -162,14 +155,10 @@ const PlatformPage: React.FC = () => {
               ))}
             </div>
           </section>
-
-          <div className="mt-8 text-center">
-            <Link to="/video-downloader" className="text-sm text-neon-cyan hover:underline">← View all 50+ video platforms</Link>
-          </div>
         </div>
       </div>
     </>
   );
 };
 
-export default PlatformPage;
+export default AudioPlatformPage;

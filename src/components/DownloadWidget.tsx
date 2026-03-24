@@ -1,21 +1,25 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Clipboard, Copy, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
-import { detectPlatform, type PlatformInfo } from '@/lib/platforms';
+import { Download, Clipboard, Copy, RefreshCw, AlertCircle, CheckCircle, Music } from 'lucide-react';
+import { detectPlatformFromUrl, VIDEO_PLATFORMS, AUDIO_PLATFORMS, type Platform } from '@/data/platforms';
 import axios from 'axios';
 
-interface VideoFormat {
+interface MediaFormat {
   quality: string;
   url: string;
   ext: string;
+  size?: string | null;
+  type?: string;
 }
 
-interface VideoResult {
+interface MediaResult {
   title: string;
   thumbnail: string | null;
-  formats: VideoFormat[];
+  formats: MediaFormat[];
   platform: string;
   source: string;
+  type?: string;
+  duration?: string | null;
 }
 
 type WidgetState = 'idle' | 'detecting' | 'loading' | 'success' | 'error';
@@ -30,14 +34,14 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [state, setState] = useState<WidgetState>('idle');
-  const [detected, setDetected] = useState<PlatformInfo | null>(null);
-  const [result, setResult] = useState<VideoResult | null>(null);
+  const [detected, setDetected] = useState<Platform | null>(null);
+  const [result, setResult] = useState<MediaResult | null>(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (url.length > 10) {
-      const p = detectPlatform(url);
+      const p = detectPlatformFromUrl(url);
       if (p) {
         setDetected(p);
         setState('detecting');
@@ -54,6 +58,9 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       setUrl(text);
     } catch { /* clipboard not available */ }
   }, []);
+
+  const isAudio = detected?.category === 'audio';
+  const isWatermarkFree = detected && 'supportsWatermarkFree' in detected && detected.supportsWatermarkFree;
 
   const handleDownload = useCallback(async () => {
     if (!url.trim()) {
@@ -88,7 +95,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     setResult(null);
 
     try {
-      const res = await axios.post(`${API_BASE}/download`, { url }, { timeout: 15000 });
+      const res = await axios.post(`${API_BASE}/download`, { url }, { timeout: 20000 });
       setResult(res.data);
       setState('success');
     } catch (err: any) {
@@ -121,7 +128,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleDownload()}
-          placeholder={t('input_placeholder')}
+          placeholder="Paste any video or audio URL here…"
           className="glass-input flex-1 px-4 py-3.5 text-sm bg-transparent border-0 backdrop-filter-none"
           style={{ backdropFilter: 'none' }}
         />
@@ -136,11 +143,17 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
 
       {/* Platform detection badge */}
       {detected && state === 'detecting' && (
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 flex-wrap">
           <CheckCircle className="w-4 h-4" style={{ color: detected.color }} />
           <span className="text-sm" style={{ color: detected.color }}>
             ✓ {detected.name} {t('detecting')}
           </span>
+          {isWatermarkFree && (
+            <span className="px-2 py-0.5 text-[10px] rounded-full bg-green-500/20 text-green-400 font-bold">Watermark-Free ✓</span>
+          )}
+          {isAudio && (
+            <span className="px-2 py-0.5 text-[10px] rounded-full bg-blue-500/20 text-blue-400 font-bold">🎵 Audio</span>
+          )}
         </div>
       )}
 
@@ -191,12 +204,20 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       {state === 'success' && result && result.platform !== 'youtube' && (
         <div className="mt-4 glass p-5">
           <div className="flex gap-4">
-            {result.thumbnail && (
+            {result.thumbnail ? (
               <img src={result.thumbnail} alt={result.title} className="w-32 h-20 object-cover rounded-xl" />
-            )}
+            ) : isAudio ? (
+              <div className="w-32 h-20 rounded-xl bg-foreground/5 flex items-center justify-center">
+                <Music className="w-8 h-8 text-neon-cyan/60" />
+              </div>
+            ) : null}
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold truncate">{result.title}</h3>
-              <span className="text-xs text-muted-foreground capitalize">{result.platform}</span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-muted-foreground capitalize">{result.platform}</span>
+                {result.type === 'audio' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400">🎵 Audio</span>}
+                {result.duration && <span className="text-xs text-muted-foreground">{result.duration}</span>}
+              </div>
             </div>
           </div>
 
@@ -213,6 +234,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
               >
                 <Download className="w-3 h-3" />
                 {f.quality} ({f.ext})
+                {f.size && <span className="text-[10px] opacity-70">{f.size}</span>}
               </a>
             ))}
           </div>

@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Zap, Shield, Smartphone, Download, Globe, Eye } from 'lucide-react';
+import { Zap, Shield, Smartphone, Download, Globe, Eye, Music, Headphones, Mic, Volume2 } from 'lucide-react';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
-import { platforms, getPlatformsByCategory } from '@/lib/platforms';
+import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getPopularAudioPlatforms } from '@/data/platforms';
+
+const SITE = 'https://socialmediavideodownload.com';
 
 const features = [
   { icon: Eye, titleKey: 'feature_no_watermark', descKey: 'feature_no_watermark_desc' },
@@ -14,17 +16,25 @@ const features = [
   { icon: Download, titleKey: 'feature_fast', descKey: 'feature_fast_desc' },
   { icon: Globe, titleKey: 'feature_platforms', descKey: 'feature_platforms_desc' },
   { icon: Smartphone, titleKey: 'feature_mobile', descKey: 'feature_mobile_desc' },
+  { icon: Music, title: 'MP3 Download', desc: 'Extract audio from any video in MP3 format' },
+  { icon: Headphones, title: 'Podcast Saver', desc: 'Download podcast episodes for offline listening' },
+  { icon: Mic, title: 'Music Download', desc: 'Save tracks from Spotify, SoundCloud, and more' },
+  { icon: Volume2, title: 'Lossless Quality', desc: 'Best available audio quality extraction' },
 ];
 
 const stats = [
-  { value: '10,000,000+', labelKey: 'stat_downloads' },
-  { value: '190+', labelKey: 'stat_countries' },
-  { value: '70+', labelKey: 'stat_platforms' },
-  { value: '99.9%', labelKey: 'stat_uptime' },
+  { value: `${VIDEO_PLATFORMS.length}+`, label: 'Video Platforms' },
+  { value: `${AUDIO_PLATFORMS.length}`, label: 'Audio Platforms' },
+  { value: 'No Login', label: 'Required' },
+  { value: 'Always', label: 'Free' },
 ];
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'video' | 'audio'>('video');
+
+  const popularVideo = getPopularVideoPlatforms();
+  const popularAudio = getPopularAudioPlatforms();
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -32,14 +42,14 @@ const Home: React.FC = () => {
       {
         '@type': 'WebSite',
         name: 'Social Media Video Downloader',
-        url: 'https://socialmediavideodownloader.com',
-        potentialAction: { '@type': 'SearchAction', target: 'https://socialmediavideodownloader.com/?url={url}', 'query-input': 'required name=url' },
+        url: SITE,
+        potentialAction: { '@type': 'SearchAction', target: `${SITE}/?url={url}`, 'query-input': 'required name=url' },
       },
       {
         '@type': 'Organization',
-        name: 'SocialMediaVideoDownloader.com',
-        url: 'https://socialmediavideodownloader.com',
-        logo: 'https://socialmediavideodownloader.com/logo.png',
+        name: 'SocialMediaVideoDownload.com',
+        url: SITE,
+        logo: `${SITE}/logo.png`,
       },
     ],
   };
@@ -47,9 +57,9 @@ const Home: React.FC = () => {
   return (
     <>
       <SEOHead
-        title="Download Any Social Media Video — Free, Fast, No Watermark"
+        title="Download Videos & Music From Any Platform — Free"
         description="Download videos & audio from TikTok, Instagram, Twitter, Facebook, SoundCloud, Spotify and 70+ platforms. Free, fast, HD quality, no watermark."
-        canonical="https://socialmediavideodownloader.com"
+        canonical={SITE}
         jsonLd={jsonLd}
       />
 
@@ -58,12 +68,15 @@ const Home: React.FC = () => {
         <section className="pt-28 pb-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-orbitron text-3xl md:text-5xl lg:text-6xl font-bold neon-text leading-tight mb-2">
-              {t('hero_title')}
+              Download Videos & Music From Any Platform — Free
             </h1>
-            <p className="font-orbitron text-lg md:text-2xl text-neon-cyan/80 mb-4">{t('hero_subtitle')}</p>
-            <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto mb-8">{t('hero_desc')}</p>
+            <p className="font-orbitron text-lg md:text-2xl text-neon-cyan/80 mb-4">
+              Supports {VIDEO_PLATFORMS.length}+ video platforms and {AUDIO_PLATFORMS.length} audio platforms
+            </p>
+            <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto mb-8">
+              Including TikTok, Instagram, Spotify, SoundCloud, Twitter, Facebook, Bilibili, Reddit, and many more
+            </p>
 
-            {/* Trust badges */}
             <div className="flex flex-wrap justify-center gap-3 mb-10">
               {['trust_downloads', 'trust_countries', 'trust_no_reg', 'trust_free'].map(key => (
                 <span key={key} className="glass px-4 py-2 text-xs text-foreground/70">{t(key)}</span>
@@ -72,72 +85,57 @@ const Home: React.FC = () => {
 
             <DownloadWidget />
 
-            {/* Platform icons */}
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
-              {platforms.filter(p => p.id !== 'youtube').map(p => (
-                <Link key={p.id} to={`/download/${p.id}`}
-                  className="glass px-3 py-2 text-xs font-bold transition-all duration-200 hover:scale-105"
-                  style={{ '--hover-color': p.color } as React.CSSProperties}
-                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 0 20px ${p.color}40`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '')}
+            {/* Platform tabs */}
+            <div className="mt-10">
+              <div className="flex justify-center gap-2 mb-6">
+                <button
+                  onClick={() => setActiveTab('video')}
+                  className={`px-5 py-2.5 text-sm font-bold rounded-full transition-all ${activeTab === 'video' ? 'neon-btn' : 'glass text-foreground/60 hover:text-foreground'}`}
                 >
-                  {p.name}
-                </Link>
-              ))}
+                  📹 Video Platforms
+                </button>
+                <button
+                  onClick={() => setActiveTab('audio')}
+                  className={`px-5 py-2.5 text-sm font-bold rounded-full transition-all ${activeTab === 'audio' ? 'neon-btn' : 'glass text-foreground/60 hover:text-foreground'}`}
+                >
+                  🎵 Audio Platforms
+                </button>
+              </div>
+
+              {activeTab === 'video' && (
+                <div className="flex flex-wrap justify-center gap-3">
+                  {popularVideo.map(p => (
+                    <Link key={p.id} to={`/download/${p.slug}`}
+                      className="glass px-3 py-2 text-xs font-bold transition-all duration-200 hover:scale-105"
+                      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 0 20px ${p.color}40`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '')}
+                    >
+                      {p.name}
+                    </Link>
+                  ))}
+                  <Link to="/video-downloader" className="glass px-3 py-2 text-xs font-bold text-neon-cyan">All {VIDEO_PLATFORMS.length}+ →</Link>
+                </div>
+              )}
+
+              {activeTab === 'audio' && (
+                <div className="flex flex-wrap justify-center gap-3">
+                  {popularAudio.map(p => (
+                    <Link key={p.id} to={`/audio/${p.slug}`}
+                      className="glass px-3 py-2 text-xs font-bold transition-all duration-200 hover:scale-105"
+                      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 0 20px ${p.color}40`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = '')}
+                    >
+                      {p.name}
+                    </Link>
+                  ))}
+                  <Link to="/audio-downloader" className="glass px-3 py-2 text-xs font-bold text-neon-cyan">All {AUDIO_PLATFORMS.length} →</Link>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
         <AdSlot format="responsive" />
-
-        {/* Platform Grid — Video */}
-        <section className="py-16 px-4">
-          <div className="container mx-auto">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-bold text-center neon-text-purple mb-10">🎬 Video & Social Platforms</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {getPlatformsByCategory('video').map(p => (
-                <Link key={p.id} to={`/download/${p.id}`}
-                  className="glass glass-hover p-4 transition-all duration-300 block"
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${p.color}40`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
-                      {p.name[0]}
-                    </div>
-                    <h3 className="font-orbitron text-xs font-bold truncate">{p.name}</h3>
-                    {p.id === 'youtube' && <span className="text-[9px] px-1 py-0.5 rounded bg-neon-pink/20 text-neon-pink shrink-0">Ext.</span>}
-                  </div>
-                  <span className="text-[10px] text-neon-cyan block">Download →</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Platform Grid — Audio */}
-        <section className="py-16 px-4">
-          <div className="container mx-auto">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-bold text-center neon-text-purple mb-10">🎵 Audio & Podcast Platforms</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {getPlatformsByCategory('audio').map(p => (
-                <Link key={p.id} to={`/download/${p.id}`}
-                  className="glass glass-hover p-4 transition-all duration-300 block"
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${p.color}40`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
-                      {p.name[0]}
-                    </div>
-                    <h3 className="font-orbitron text-xs font-bold truncate">{p.name}</h3>
-                  </div>
-                  <span className="text-[10px] text-neon-cyan block">Download →</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* How it works */}
         <section className="py-16 px-4">
@@ -159,12 +157,12 @@ const Home: React.FC = () => {
         <section className="py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             <h2 className="font-orbitron text-2xl md:text-3xl font-bold text-center neon-text-purple mb-10">Features</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {features.map((f, i) => (
                 <div key={i} className="glass glass-hover p-6 transition-all duration-300">
                   <f.icon className="w-8 h-8 text-neon-cyan mb-3" />
-                  <h3 className="font-orbitron text-sm font-bold mb-1">{t(f.titleKey)}</h3>
-                  <p className="text-xs text-muted-foreground">{t(f.descKey)}</p>
+                  <h3 className="font-orbitron text-sm font-bold mb-1">{'titleKey' in f ? t(f.titleKey) : f.title}</h3>
+                  <p className="text-xs text-muted-foreground">{'descKey' in f ? t(f.descKey) : f.desc}</p>
                 </div>
               ))}
             </div>
@@ -180,7 +178,7 @@ const Home: React.FC = () => {
               {stats.map((s, i) => (
                 <div key={i} className="glass p-6 text-center">
                   <div className="font-orbitron text-2xl md:text-3xl font-bold neon-text">{s.value}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{t(s.labelKey)}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
                 </div>
               ))}
             </div>
