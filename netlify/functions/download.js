@@ -193,8 +193,9 @@ exports.handler = async (event) => {
   const layers = [
     { name: 'cobalt', fn: () => tryCobalt(url) },
     { name: 'alldownloader', fn: () => tryAllDownloader(url) },
+    { name: 'socialmediadl', fn: () => trySocialMediaDL(url) },
     { name: 'fastsaver', fn: () => tryFastSaver(url) },
-    { name: 'rapidapi-smvd', fn: () => tryRapidAPI(url) },
+    { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
