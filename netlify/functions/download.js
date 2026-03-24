@@ -55,33 +55,41 @@ async function tryFastSaver(url) {
   };
 }
 
-async function tryAutoDownload(url) {
-  const res = await axios.get('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', {
-    params: { url },
-    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com' },
-    timeout: 6000,
-  });
-  if (!res.data || !res.data.medias) throw new Error('AutoDownload failed');
+async function tryAllDownloader(url) {
+  const res = await axios.post(
+    'https://all-downloader1.p.rapidapi.com/download',
+    `url=${encodeURIComponent(url)}`,
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'all-downloader1.p.rapidapi.com',
+      },
+      timeout: 6000,
+    }
+  );
+  if (!res.data || (!res.data.medias && !res.data.url)) throw new Error('AllDownloader failed');
+  const medias = res.data.medias || [{ url: res.data.url, quality: 'HD', extension: 'mp4' }];
   return {
     title: res.data.title || 'Video',
     thumbnail: res.data.thumbnail || null,
-    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
-    source: 'autodownload',
+    formats: medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.extension || 'mp4' })),
+    source: 'alldownloader',
   };
 }
 
 async function tryRapidAPI(url) {
-  const res = await axios.get('https://all-social-media-video-downloader.p.rapidapi.com/v1/social/video', {
+  const res = await axios.get('https://social-media-video-downloader.p.rapidapi.com/smvd/get/all', {
     params: { url },
-    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'all-social-media-video-downloader.p.rapidapi.com' },
+    headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, 'X-RapidAPI-Host': 'social-media-video-downloader.p.rapidapi.com' },
     timeout: 6000,
   });
-  if (!res.data || !res.data.medias) throw new Error('RapidAPI failed');
+  if (!res.data || !res.data.links) throw new Error('RapidAPI SMVD failed');
   return {
     title: res.data.title || 'Video',
-    thumbnail: res.data.thumbnail || null,
-    formats: res.data.medias.map((m) => ({ quality: m.quality || 'HD', url: m.url, ext: m.ext || 'mp4' })),
-    source: 'rapidapi',
+    thumbnail: res.data.picture || null,
+    formats: res.data.links.filter(l => l.link).map((l) => ({ quality: l.quality || 'HD', url: l.link, ext: 'mp4' })),
+    source: 'rapidapi-smvd',
   };
 }
 
@@ -162,9 +170,9 @@ exports.handler = async (event) => {
   const platform = detectPlatform(url);
   const layers = [
     { name: 'cobalt', fn: () => tryCobalt(url) },
-    { name: 'autodownload', fn: () => tryAutoDownload(url) },
+    { name: 'alldownloader', fn: () => tryAllDownloader(url) },
     { name: 'fastsaver', fn: () => tryFastSaver(url) },
-    { name: 'rapidapi', fn: () => tryRapidAPI(url) },
+    { name: 'rapidapi-smvd', fn: () => tryRapidAPI(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
