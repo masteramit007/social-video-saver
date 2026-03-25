@@ -645,7 +645,6 @@ Deno.serve(async (req) => {
   const platform = detectPlatform(url);
   const layers = [
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
-    { name: 'cobalt', fn: () => tryCobalt(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
