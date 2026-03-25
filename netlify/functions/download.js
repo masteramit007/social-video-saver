@@ -377,18 +377,65 @@ function checkRateLimit(ip) {
 }
 
 // Layer 3: Native platform fallbacks (free, always on)
+// Covers ALL supported platforms with oEmbed, page scraping, or public API approaches
+
+async function scrapeOpenGraph(url) {
+  const res = await axios.get(url, {
+    timeout: 8000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml',
+    },
+    maxRedirects: 5,
+  });
+  const html = typeof res.data === 'string' ? res.data : '';
+  const og = (prop) => {
+    const m = html.match(new RegExp(`<meta[^>]+property=["']og:${prop}["'][^>]+content=["']([^"']+)["']`, 'i'))
+      || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:${prop}["']`, 'i'));
+    return m?.[1] || null;
+  };
+  const title = og('title') || html.match(/<title>([^<]+)<\/title>/i)?.[1] || 'Video';
+  const thumbnail = og('image') || null;
+  const videoUrl = og('video:secure_url') || og('video:url') || og('video') || null;
+  return { title, thumbnail, videoUrl, html };
+}
+
+async function tryOEmbed(url, oembedEndpoint) {
+  try {
+    const res = await axios.get(oembedEndpoint, {
+      params: { url, format: 'json' },
+      timeout: 8000,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    const html = res.data?.html || '';
+    const srcMatch = html.match(/src=["']([^"']+)["']/);
+    return {
+      title: res.data?.title || 'Video',
+      thumbnail: res.data?.thumbnail_url || null,
+      embedUrl: srcMatch?.[1] || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function tryNativeFallback(url, platform) {
+  // ---------- Reddit ----------
   if (platform === 'reddit') {
-    const jsonUrl = url.replace(/\/?$/, '.json');
+    const jsonUrl = url.replace(/\/?(\?.*)?$/, '.json$1');
     const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
-    const post = res.data[0]?.data?.children[0]?.data;
+    const post = res.data?.[0]?.data?.children?.[0]?.data;
     const videoUrl = getRedditVideoUrl(post);
     if (!videoUrl) throw new Error('Reddit: no video found');
-    return { title: post.title || 'Reddit Video', thumbnail: post.thumbnail || null, formats: [{ quality: 'HD', url: videoUrl, ext: 'mp4' }], source: 'native-reddit' };
+    return { title: post?.title || 'Reddit Video', thumbnail: post?.thumbnail || null, formats: [{ quality: 'HD', url: videoUrl, ext: 'mp4' }], source: 'native-reddit' };
   }
+
+  // ---------- X / Twitter ----------
   if (platform === 'twitter') {
     return tryXFallback(url);
   }
+
+  // ---------- Bilibili ----------
   if (platform === 'bilibili') {
     const bvid = url.match(/BV[\w]+/)?.[0];
     if (!bvid) throw new Error('Bilibili: no BVID');
@@ -401,21 +448,292 @@ async function tryNativeFallback(url, platform) {
     if (!videoUrl) throw new Error('Bilibili: no stream');
     return { title: title || 'Bilibili Video', thumbnail: thumb || null, formats: [{ quality: '720p', url: videoUrl, ext: 'mp4' }], source: 'native-bilibili' };
   }
+
+  // ---------- Dailymotion ----------
   if (platform === 'dailymotion') {
     const videoId = url.match(/video\/([a-zA-Z0-9]+)/)?.[1];
     if (!videoId) throw new Error('Dailymotion: no ID');
     const res = await axios.get(`https://api.dailymotion.com/video/${videoId}?fields=title,thumbnail_url,stream_h264_hd_url,stream_h264_url`, { timeout: 8000 });
     return {
-      title: res.data.title || 'Dailymotion Video',
-      thumbnail: res.data.thumbnail_url || null,
+      title: res.data?.title || 'Dailymotion Video',
+      thumbnail: res.data?.thumbnail_url || null,
       formats: [
-        { quality: '720p', url: res.data.stream_h264_hd_url, ext: 'mp4' },
-        { quality: '480p', url: res.data.stream_h264_url, ext: 'mp4' },
+        { quality: '720p', url: res.data?.stream_h264_hd_url, ext: 'mp4' },
+        { quality: '480p', url: res.data?.stream_h264_url, ext: 'mp4' },
       ].filter((f) => f.url),
       source: 'native-dailymotion',
     };
   }
-  throw new Error(`No native fallback for ${platform}`);
+
+  // ---------- Vimeo ----------
+  if (platform === 'vimeo') {
+    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1];
+    if (!videoId) throw new Error('Vimeo: no ID');
+    const res = await axios.get(`https://player.vimeo.com/video/${videoId}/config`, {
+      timeout: 8000,
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://vimeo.com/' },
+    });
+    const files = res.data?.request?.files?.progressive || [];
+    if (!files.length) throw new Error('Vimeo: no progressive files');
+    return {
+      title: res.data?.video?.title || 'Vimeo Video',
+      thumbnail: res.data?.video?.thumbs?.['640'] || null,
+      formats: files.map(f => ({ quality: f.quality || `${f.height}p`, url: f.url, ext: 'mp4', size: null })),
+      source: 'native-vimeo',
+    };
+  }
+
+  // ---------- Pinterest ----------
+  if (platform === 'pinterest') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-pinterest' };
+    }
+    throw new Error('Pinterest: no video found via OG tags');
+  }
+
+  // ---------- Tumblr ----------
+  if (platform === 'tumblr') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-tumblr' };
+    }
+    throw new Error('Tumblr: no video found');
+  }
+
+  // ---------- Imgur ----------
+  if (platform === 'imgur') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-imgur' };
+    }
+    // Imgur also uses direct mp4 links
+    const id = url.match(/imgur\.com\/(?:a\/)?([a-zA-Z0-9]+)/)?.[1];
+    if (id) {
+      const mp4 = `https://i.imgur.com/${id}.mp4`;
+      return { title: 'Imgur Video', thumbnail: `https://i.imgur.com/${id}.jpg`, formats: [{ quality: 'HD', url: mp4, ext: 'mp4' }], source: 'native-imgur' };
+    }
+    throw new Error('Imgur: no video found');
+  }
+
+  // ---------- Streamable ----------
+  if (platform === 'streamable') {
+    const id = url.match(/streamable\.com\/([a-zA-Z0-9]+)/)?.[1];
+    if (!id) throw new Error('Streamable: no ID');
+    const oembed = await tryOEmbed(url, 'https://api.streamable.com/oembed.json');
+    const mp4 = `https://streamable.com/video/mp4/${id}`;
+    return {
+      title: oembed?.title || 'Streamable Video',
+      thumbnail: oembed?.thumbnail || null,
+      formats: [{ quality: 'HD', url: `https://streamable.com/o/${id}`, ext: 'mp4' }],
+      source: 'native-streamable',
+    };
+  }
+
+  // ---------- VK ----------
+  if (platform === 'vk') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-vk' };
+    }
+    throw new Error('VK: no video found via OG tags');
+  }
+
+  // ---------- OK.ru ----------
+  if (platform === 'ok') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-ok' };
+    }
+    throw new Error('OK.ru: no video found via OG tags');
+  }
+
+  // ---------- Rutube ----------
+  if (platform === 'rutube') {
+    const videoId = url.match(/rutube\.ru\/video\/([a-f0-9]+)/)?.[1];
+    if (!videoId) throw new Error('Rutube: no video ID');
+    const res = await axios.get(`https://rutube.ru/api/play/options/${videoId}/?format=json`, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const m3u8 = res.data?.video_balancer?.m3u8;
+    // For m3u8, we still return it — some clients handle it
+    return {
+      title: res.data?.title || 'Rutube Video',
+      thumbnail: res.data?.thumbnail_url || null,
+      formats: m3u8 ? [{ quality: 'HD (m3u8)', url: m3u8, ext: 'm3u8' }] : [],
+      source: 'native-rutube',
+    };
+  }
+
+  // ---------- TED ----------
+  if (platform === 'ted') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-ted' };
+    }
+    throw new Error('TED: no video found');
+  }
+
+  // ---------- Coub ----------
+  if (platform === 'coub') {
+    const id = url.match(/coub\.com\/view\/([a-zA-Z0-9]+)/)?.[1];
+    if (!id) throw new Error('Coub: no ID');
+    const res = await axios.get(`https://coub.com/api/v2/coubs/${id}`, { timeout: 8000 });
+    const mp4 = res.data?.file_versions?.html5?.video?.higher?.url || res.data?.file_versions?.html5?.video?.med?.url;
+    if (!mp4) throw new Error('Coub: no video URL');
+    return {
+      title: res.data?.title || 'Coub Video',
+      thumbnail: res.data?.image_versions?.template?.replace('%{version}', 'med') || null,
+      formats: [{ quality: 'HD', url: mp4, ext: 'mp4' }],
+      source: 'native-coub',
+    };
+  }
+
+  // ---------- 9GAG ----------
+  if (platform === '9gag') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-9gag' };
+    }
+    throw new Error('9GAG: no video found');
+  }
+
+  // ---------- SoundCloud ----------
+  if (platform === 'soundcloud') {
+    const og = await scrapeOpenGraph(url);
+    // SoundCloud doesn't expose direct audio in OG but we can try oEmbed for metadata
+    const oembed = await tryOEmbed(url, 'https://soundcloud.com/oembed');
+    return {
+      title: oembed?.title || og.title || 'SoundCloud Track',
+      thumbnail: oembed?.thumbnail || og.thumbnail || null,
+      formats: [], // RapidAPI/Cobalt handle actual download; native returns metadata
+      source: 'native-soundcloud',
+      type: 'audio',
+      note: 'SoundCloud direct download requires API authentication. The track was detected but download must go through our primary extractors.',
+    };
+  }
+
+  // ---------- Bandcamp ----------
+  if (platform === 'bandcamp') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'audio', url: og.videoUrl, ext: 'mp3' }], source: 'native-bandcamp', type: 'audio' };
+    }
+    // Bandcamp often has direct mp3 in page source
+    const mp3Match = og.html?.match(/"mp3-128"\s*:\s*"([^"]+)"/);
+    if (mp3Match?.[1]) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: '128kbps', url: mp3Match[1], ext: 'mp3' }], source: 'native-bandcamp', type: 'audio' };
+    }
+    throw new Error('Bandcamp: no audio found');
+  }
+
+  // ---------- Mixcloud ----------
+  if (platform === 'mixcloud') {
+    const oembed = await tryOEmbed(url, 'https://www.mixcloud.com/oembed/');
+    return {
+      title: oembed?.title || 'Mixcloud Mix',
+      thumbnail: oembed?.thumbnail || null,
+      formats: [],
+      source: 'native-mixcloud',
+      type: 'audio',
+      note: 'Mixcloud streams are DRM-protected. Use primary extractors.',
+    };
+  }
+
+  // ---------- Twitch ----------
+  if (platform === 'twitch') {
+    const clipId = url.match(/clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/)?.[1] || url.match(/twitch\.tv\/\w+\/clip\/([a-zA-Z0-9_-]+)/)?.[1];
+    if (clipId) {
+      const og = await scrapeOpenGraph(`https://clips.twitch.tv/${clipId}`);
+      if (og.videoUrl) {
+        return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-twitch' };
+      }
+    }
+    throw new Error('Twitch: only clips with OG video tags are supported natively');
+  }
+
+  // ---------- ESPN ----------
+  if (platform === 'espn') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-espn' };
+    }
+    throw new Error('ESPN: no video found');
+  }
+
+  // ---------- Likee ----------
+  if (platform === 'likee') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-likee' };
+    }
+    throw new Error('Likee: no video found');
+  }
+
+  // ---------- iFunny ----------
+  if (platform === 'ifunny') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-ifunny' };
+    }
+    throw new Error('iFunny: no video found');
+  }
+
+  // ---------- Lemon8 ----------
+  if (platform === 'lemon8') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-lemon8' };
+    }
+    throw new Error('Lemon8: no video found');
+  }
+
+  // ---------- BitChute ----------
+  if (platform === 'bitchute') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-bitchute' };
+    }
+    throw new Error('BitChute: no video found');
+  }
+
+  // ---------- ShareChat ----------
+  if (platform === 'sharechat') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-sharechat' };
+    }
+    throw new Error('ShareChat: no video found');
+  }
+
+  // ---------- Weibo ----------
+  if (platform === 'weibo') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-weibo' };
+    }
+    throw new Error('Weibo: no video found');
+  }
+
+  // ---------- GENERIC OG FALLBACK for all remaining platforms ----------
+  // This catches: instagram, facebook, tiktok, douyin, capcut, hipi, xiaohongshu,
+  // snapchat, threads, bluesky, kick, dlive, rumble, kuaishou, qq, sohu, ixigua,
+  // meipai, sina, afreecatv, chzzk, telegram, imdb, linkedin, spotify, apple-music,
+  // apple-podcasts, deezer, tidal, audiomack, audius, jiosaavn, gaana, zingmp3,
+  // nhaccuatui, castbox, audioboom, acast, hearthis, jamendo, simplecast, spreaker
+  try {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      const ext = inferExtension(og.videoUrl, 'mp4');
+      return {
+        title: og.title,
+        thumbnail: og.thumbnail,
+        formats: [{ quality: 'HD', url: og.videoUrl, ext }],
+        source: `native-${platform}`,
+      };
+    }
+    throw new Error(`${platform}: no og:video found`);
+  } catch (ogErr) {
+    throw new Error(`No native fallback for ${platform}: ${ogErr.message}`);
+  }
 }
 
 exports.handler = async (event) => {
