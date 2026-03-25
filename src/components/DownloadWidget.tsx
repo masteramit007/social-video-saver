@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Clipboard, Copy, RefreshCw, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { detectPlatformFromUrl, VIDEO_PLATFORMS, AUDIO_PLATFORMS, type Platform } from '@/data/platforms';
-import axios from 'axios';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MediaFormat {
