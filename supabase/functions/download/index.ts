@@ -244,7 +244,9 @@ async function trySocialDownloadAllInOne(url: string) {
   if (!res.ok) throw new Error(`Social Download AIO returned ${res.status}`);
   if (res.data?.error && res.data?.error !== true) throw new Error(String(res.data.error));
   if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed to Social Download All In One');
-  if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed to Social Download All In One');
+
+  console.log(`[social-download-aio] Raw response keys: ${JSON.stringify(Object.keys(res.data || {}))}`);
+  console.log(`[social-download-aio] Raw response preview: ${JSON.stringify(res.data).substring(0, 500)}`);
 
   const normalized = normalizeRapidApiResult(res.data);
   if (!normalized.formats.length) throw new Error('Social Download All In One returned no downloadable media');
