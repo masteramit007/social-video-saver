@@ -22,15 +22,13 @@ export const PSEO_LANGUAGES = [
 ];
 
 export const PSEO_VIDEO_PLATFORMS = [
-  'tiktok','instagram','twitter','facebook','youtube',
-  'reddit','bilibili','snapchat','pinterest','linkedin',
-  'threads','bluesky','twitch','vk','rumble','dailymotion',
-  'vimeo','telegram','douyin','kuaishou','weibo','9gag',
-  'ok','rutube','capcut','hipi'
+  'tiktok','youtube','reddit','pinterest','bilibili',
+  'vimeo','dailymotion','tumblr','twitch','vk',
+  'ok','rutube','9gag','ted','imgur','streamable',
+  'bitchute','coub','likee','sharechat','espn',
+  'lemon8','ifunny','weibo'
 ];
 
 export const PSEO_AUDIO_PLATFORMS = [
-  'soundcloud','spotify','apple-music','apple-podcasts',
-  'jiosaavn','gaana','deezer','tidal','mixcloud',
-  'bandcamp','audiomack','zingmp3'
+  'bandcamp'
 ];
