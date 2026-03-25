@@ -55,8 +55,8 @@ Yes! Our tool never stores your videos or personal data. We simply extract the d
 const getContent = (slug: string): string => {
   if (blogContent[slug]) return blogContent[slug];
   const post = blogPosts.find(p => p.slug === slug);
-  return \`
-\${post?.excerpt || ''}
+  return `
+${post?.excerpt || ''}
 
 ## Overview
 
@@ -98,7 +98,7 @@ We take your privacy seriously. Our tool never stores your videos, doesn't requi
 ## Conclusion
 
 Downloading social media videos doesn't have to be complicated. Our free tool makes it simple, fast, and safe. Try it today and save your favorite videos for offline viewing.
-  \`;
+  `;
 };
 
 const BlogPost: React.FC = () => {
