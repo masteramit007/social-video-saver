@@ -181,14 +181,17 @@ async function tryAllMediaDownloader(url: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
 
+  const HOST = 'all-media-downloader1.p.rapidapi.com';
+  const BASE = `https://${HOST}`;
+
   // Detect which endpoint to use based on URL
   const endpointMap: Record<string, string> = {
-    tiktok: 'https://all-media-downloader.p.rapidapi.com/TikTok',
-    twitter: 'https://all-media-downloader.p.rapidapi.com/Twitter',
-    youtube: 'https://all-media-downloader.p.rapidapi.com/YouTube',
-    pinterest: 'https://all-media-downloader.p.rapidapi.com/Pinterest',
-    bilibili: 'https://all-media-downloader.p.rapidapi.com/BiliBili',
-    douyin: 'https://all-media-downloader.p.rapidapi.com/douyin',
+    tiktok: `${BASE}/TikTok`,
+    twitter: `${BASE}/Twitter`,
+    youtube: `${BASE}/YouTube`,
+    pinterest: `${BASE}/Pinterest`,
+    bilibili: `${BASE}/BiliBili`,
+    douyin: `${BASE}/douyin`,
   };
 
   // Find matching endpoint
@@ -207,7 +210,7 @@ async function tryAllMediaDownloader(url: string) {
     method: 'GET',
     headers: {
       'X-RapidAPI-Key': rapidApiKey,
-      'X-RapidAPI-Host': 'all-media-downloader.p.rapidapi.com',
+      'X-RapidAPI-Host': HOST,
     },
     timeout: 10000,
   });
