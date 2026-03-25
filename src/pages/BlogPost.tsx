@@ -144,7 +144,7 @@ const BlogPost: React.FC = () => {
 
   return (
     <>
-      <SEOHead title={post.title} description={post.excerpt} canonical={\`https://socialmediavideodownloader.com/blog/\${slug}\`} jsonLd={jsonLd} />
+      <SEOHead title={post.title} description={post.excerpt} canonical={`https://socialmediavideodownloader.com/blog/${slug}`} jsonLd={jsonLd} />
       <div className="relative z-10 pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-3xl">
           {/* Breadcrumb */}
