@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Clipboard, Copy, RefreshCw, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { detectPlatformFromUrl, VIDEO_PLATFORMS, AUDIO_PLATFORMS, type Platform } from '@/data/platforms';
-import axios from 'axios';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MediaFormat {
   quality: string;
@@ -28,7 +28,7 @@ interface DownloadWidgetProps {
   forcePlatform?: string;
 }
 
-const API_BASE = '/.netlify/functions';
+
 
 const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   const { t } = useTranslation();
@@ -95,11 +95,14 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     setResult(null);
 
     try {
-      const res = await axios.post(`${API_BASE}/download`, { url }, { timeout: 30000 });
-      setResult(res.data);
+      const { data, error: fnError } = await supabase.functions.invoke('download', {
+        body: { url },
+      });
+      if (fnError) throw fnError;
+      setResult(data);
       setState('success');
     } catch (err: any) {
-      const msg = err.response?.data?.error || t('error_failed');
+      const msg = err?.message || t('error_failed');
       setError(msg);
       setState('error');
     }
