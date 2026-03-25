@@ -275,44 +275,104 @@ async function tryXFallback(url: string) {
   const statusId = getXStatusId(url);
   if (!statusId) throw new Error('X: could not parse tweet status ID');
 
-  // Extract username from URL for endpoints that need it
   const usernameMatch = url.match(/(?:twitter\.com|x\.com)\/([A-Za-z0-9_]+)\/status/);
   const username = usernameMatch?.[1] || 'i';
-
-  const endpoints = [
-    { url: `https://api.vxtwitter.com/${username}/status/${statusId}`, type: 'json' as const },
-    { url: `https://api.fxtwitter.com/${username}/status/${statusId}`, type: 'json' as const },
-  ];
+  const twitterUrl = `https://twitter.com/${username}/status/${statusId}`;
 
   let lastError = 'unknown error';
-  for (const endpoint of endpoints) {
+
+  // 1. Try ssstwitter API
+  try {
+    const res = await fetchJson('https://ssstwitter.com/api/download', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Origin': 'https://ssstwitter.com',
+        'Referer': 'https://ssstwitter.com/',
+      },
+      body: `id=${encodeURIComponent(twitterUrl)}&locale=en`,
+      timeout: 8000,
+    });
+    if (res.data?.url || res.data?.urls) {
+      const urls = res.data.urls || [{ url: res.data.url, quality: 'HD' }];
+      const formats: MediaFormat[] = urls
+        .filter((u: { url?: string }) => u?.url)
+        .map((u: { url: string; quality?: string }, i: number) => ({
+          quality: u.quality || (i === 0 ? 'HD' : `Quality ${i + 1}`),
+          url: u.url,
+          ext: 'mp4',
+          type: 'video',
+          size: null,
+        }));
+      if (formats.length) {
+        return { title: 'X Video', thumbnail: null, formats, source: 'native-x-ssstwitter', type: 'video' };
+      }
+    }
+    throw new Error('ssstwitter returned no media');
+  } catch (err: unknown) {
+    lastError = err instanceof Error ? err.message : 'unknown';
+    console.log(`[x-fallback] ssstwitter failed: ${lastError}`);
+  }
+
+  // 2. Try twitsave.com
+  try {
+    const res = await fetchText(`https://twitsave.com/info?url=${encodeURIComponent(twitterUrl)}`, {
+      timeout: 8000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    });
+    const html = res.data || '';
+    const videoMatches = [...html.matchAll(/href="(https?:\/\/[^"]*video\.twimg\.com[^"]*)"/g)];
+    if (videoMatches.length) {
+      const seen = new Set<string>();
+      const formats: MediaFormat[] = [];
+      for (const m of videoMatches) {
+        const u = m[1].replace(/&amp;/g, '&');
+        if (seen.has(u)) continue;
+        seen.add(u);
+        const resMatch = u.match(/\/(\d{3,4})x(\d{3,4})\//);
+        const quality = resMatch ? `${resMatch[2]}p` : (formats.length === 0 ? 'HD' : `Quality ${formats.length + 1}`);
+        formats.push({ quality, url: u, ext: 'mp4', type: 'video', size: null });
+      }
+      if (formats.length) {
+        const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+        return { title: titleMatch?.[1]?.replace(/ - TwitSave$/i, '') || 'X Video', thumbnail: null, formats, source: 'native-x-twitsave', type: 'video' };
+      }
+    }
+    throw new Error('twitsave returned no video links');
+  } catch (err: unknown) {
+    lastError = err instanceof Error ? err.message : 'unknown';
+    console.log(`[x-fallback] twitsave failed: ${lastError}`);
+  }
+
+  // 3. Try vxtwitter/fxtwitter
+  const jsonEndpoints = [
+    `https://api.vxtwitter.com/${username}/status/${statusId}`,
+    `https://api.fxtwitter.com/${username}/status/${statusId}`,
+  ];
+  for (const endpoint of jsonEndpoints) {
     try {
-      const res = await fetchJson(endpoint.url, {
+      const res = await fetchJson(endpoint, {
         timeout: 8000,
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' },
       });
-
-      // Check if response is actually JSON with media data
-      if (!res.ok || !res.data || res.data?.code === 404) {
-        throw new Error('API returned no data or 404');
-      }
-
+      if (!res.ok || !res.data || res.data?.code === 404) throw new Error('404');
       const formats = normalizeXFormats(res.data || {});
-      if (!formats.length) throw new Error('X fallback returned no downloadable media');
+      if (!formats.length) throw new Error('no media');
       return {
         title: res.data?.text || res.data?.tweet?.text || 'X Video',
         thumbnail: res.data?.media_extended?.[0]?.thumbnail_url || res.data?.media?.[0]?.thumbnail_url || null,
-        formats,
-        source: 'native-x',
-        type: 'video',
+        formats, source: 'native-x', type: 'video',
       };
     } catch (err: unknown) {
-      lastError = err instanceof Error ? err.message : 'Unknown X fallback error';
-      console.log(`[x-fallback] ${endpoint.url} failed: ${lastError}`);
+      lastError = err instanceof Error ? err.message : 'unknown';
+      console.log(`[x-fallback] ${endpoint} failed: ${lastError}`);
     }
   }
 
-  // Try savetwitter.net as last resort
+  // 4. Try savetwitter.net
   try {
     const res = await fetchJson('https://savetwitter.net/api/ajaxSearch', {
       method: 'POST',
@@ -320,27 +380,18 @@ async function tryXFallback(url: string) {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
-      body: `q=${encodeURIComponent(url)}&lang=en`,
+      body: `q=${encodeURIComponent(twitterUrl)}&lang=en`,
       timeout: 8000,
     });
-    if (res.data?.status === 'ok' && res.data?.statusCode !== 404 && res.data?.data) {
-      const html = res.data.data;
-      const videoMatches = [...(html as string).matchAll(/href="(https?:\/\/[^"]*\.mp4[^"]*)"/g)];
+    if (res.data?.status === 'ok' && res.data?.data) {
+      const html = res.data.data as string;
+      const videoMatches = [...html.matchAll(/href="(https?:\/\/[^"]*\.mp4[^"]*)"/g)];
       if (videoMatches.length) {
         const formats: MediaFormat[] = videoMatches.map((m, i) => ({
           quality: i === 0 ? 'HD' : `Quality ${i + 1}`,
-          url: m[1],
-          ext: 'mp4',
-          type: 'video',
-          size: null,
+          url: m[1], ext: 'mp4', type: 'video', size: null,
         }));
-        return {
-          title: 'X Video',
-          thumbnail: null,
-          formats,
-          source: 'native-x-savetwitter',
-          type: 'video',
-        };
+        return { title: 'X Video', thumbnail: null, formats, source: 'native-x-savetwitter', type: 'video' };
       }
     }
   } catch (err: unknown) {
