@@ -241,7 +241,9 @@ async function trySocialDownloadAllInOne(url: string) {
     timeout: 10000,
   });
 
-  if (!res.ok || res.data?.error) throw new Error(res.data?.error || `API returned ${res.status}`);
+  if (!res.ok) throw new Error(`Social Download AIO returned ${res.status}`);
+  if (res.data?.error && res.data?.error !== true) throw new Error(String(res.data.error));
+  if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed to Social Download All In One');
   if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed to Social Download All In One');
 
   const normalized = normalizeRapidApiResult(res.data);
