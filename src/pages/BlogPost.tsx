@@ -186,7 +186,7 @@ const BlogPost: React.FC = () => {
             <h3 className="font-orbitron text-lg font-bold mb-4">Related Posts</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {related.map(p => (
-                <Link key={p.slug} to={\`/blog/\${p.slug}\`} className="glass glass-hover p-4 transition-all duration-300">
+                <Link key={p.slug} to={`/blog/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
                   <span className="text-xs text-muted-foreground">{p.date}</span>
                   <h4 className="font-orbitron text-xs font-bold mt-1">{p.title}</h4>
                 </Link>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SEOHead from '@/components/SEOHead';
-import { VIDEO_PLATFORMS, AUDIO_PLATFORMS } from '@/data/platforms';
+import { VIDEO_PLATFORMS } from '@/data/platforms';
 
 export const blogPosts = [
   { slug: 'tiktok-video-downloader-no-watermark-2025', title: 'How to Download TikTok Videos Without Watermark in 2025', date: '2025-01-15', readTime: '8 min', excerpt: 'Complete guide to using a TikTok video downloader without watermark. Learn how to download TikTok videos free, save TikTok to MP4, and use our TikTok downloader no watermark tool on iPhone and Android.', keywords: 'tiktok video downloader without watermark, tiktok downloader no watermark, download tiktok without watermark, tiktok to mp4, save tiktok video, tiktok video saver' },
