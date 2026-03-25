@@ -80,40 +80,122 @@ function detectPlatform(url) {
 }
 
 // Layer 1: Auto Download All In One (PRIMARY - paid plan)
-async function tryAutoDownloadAPI(url) {
-  const response = await axios.get(
-    'https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink',
-    {
-      params: { url },
-      headers: {
-        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com'
-      },
-      timeout: 8000
-    }
+function inferExtension(mediaUrl, fallback = 'mp4') {
+  if (!mediaUrl || typeof mediaUrl !== 'string') return fallback;
+  const match = mediaUrl.match(/\.([a-zA-Z0-9]{2,5})(?:\?|#|$)/);
+  return (match?.[1] || fallback).toLowerCase();
+}
+
+function normalizeRapidApiResult(payload) {
+  const data = payload?.data || payload?.result || payload;
+  const mediaCandidates = [];
+
+  if (Array.isArray(data?.medias)) mediaCandidates.push(...data.medias);
+  if (Array.isArray(data?.links)) mediaCandidates.push(...data.links);
+  if (Array.isArray(data?.urls)) mediaCandidates.push(...data.urls);
+
+  const directUrls = [
+    data?.url,
+    data?.videoUrl,
+    data?.downloadUrl,
+    data?.download_url,
+    data?.video?.url,
+    data?.audio?.url,
+  ].filter(Boolean);
+
+  mediaCandidates.push(
+    ...directUrls.map((u) => ({ url: u, quality: 'HD' }))
   );
 
-  if (!response.data || response.data.error) {
-    throw new Error('API returned error');
+  const uniqueByUrl = new Map();
+  for (const media of mediaCandidates) {
+    const mediaUrl = media?.url || media?.link || media?.src;
+    if (!mediaUrl || uniqueByUrl.has(mediaUrl)) continue;
+
+    const ext = (media?.extension || media?.ext || inferExtension(mediaUrl, 'mp4')).toLowerCase();
+    const isAudio = ['mp3', 'm4a', 'aac', 'wav', 'ogg'].includes(ext);
+
+    uniqueByUrl.set(mediaUrl, {
+      quality: media?.quality || media?.label || (isAudio ? 'audio' : 'HD'),
+      url: mediaUrl,
+      ext,
+      size: media?.size || null,
+      type: media?.type || (isAudio ? 'audio' : 'video'),
+    });
   }
 
-  const data = response.data;
-
   return {
-    title: data.title || 'Downloaded Media',
-    thumbnail: data.thumbnail || null,
-    duration: data.duration || null,
-    platform: data.source || 'unknown',
-    type: data.type || 'video',
-    formats: (data.medias || []).map(m => ({
-      quality: m.quality || 'HD',
-      url: m.url,
-      ext: m.extension || 'mp4',
-      size: m.size || null,
-      type: m.type || 'video'
-    })),
-    source: 'auto-download-aio',
+    title: data?.title || data?.caption || 'Downloaded Media',
+    thumbnail: data?.thumbnail || data?.thumb || data?.cover || null,
+    duration: data?.duration || null,
+    platform: data?.source || data?.platform || 'unknown',
+    type: data?.type || 'video',
+    formats: Array.from(uniqueByUrl.values()),
   };
+}
+
+async function tryAutoDownloadAPI(url) {
+  if (!process.env.RAPIDAPI_KEY) {
+    throw new Error('RAPIDAPI_KEY is not configured');
+  }
+
+  const rapidApiTargets = [
+    {
+      method: 'get',
+      url: 'https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink',
+      host: 'auto-download-all-in-one.p.rapidapi.com',
+      timeout: 5000,
+      params: { url },
+    },
+    {
+      method: 'post',
+      url: 'https://auto-download-all-in-one1.p.rapidapi.com/all',
+      host: 'auto-download-all-in-one1.p.rapidapi.com',
+      timeout: 5000,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      data: new URLSearchParams({ url }).toString(),
+    },
+  ];
+
+  let lastError = 'unknown error';
+
+  for (const target of rapidApiTargets) {
+    try {
+      const response = await axios.request({
+        method: target.method,
+        url: target.url,
+        timeout: target.timeout,
+        params: target.params,
+        data: target.data,
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Host': target.host,
+          ...(target.headers || {}),
+        },
+      });
+
+      if (!response.data || response.data.error) {
+        throw new Error(response.data?.error || 'API returned error');
+      }
+
+      const normalized = normalizeRapidApiResult(response.data);
+      if (!normalized.formats.length) {
+        throw new Error('API returned no downloadable media');
+      }
+
+      return {
+        ...normalized,
+        source: 'auto-download-aio',
+      };
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg = err?.message || 'Unknown RapidAPI error';
+      lastError = status ? `${msg} (status ${status})` : msg;
+      console.log(`[rapidapi:${target.host}] ${lastError}`);
+    }
+  }
+
+  throw new Error(`RapidAPI failed across all endpoints: ${lastError}`);
 }
 
 // Layer 2: Self-hosted Cobalt (Railway backup)
@@ -121,7 +203,7 @@ async function tryCobalt(url) {
   const res = await axios.post(
     process.env.COBALT_API_URL,
     { url, vCodec: 'h264', vQuality: '720', aFormat: 'mp3', isAudioOnly: false, disableMetadata: false },
-    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 8000 }
+    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 6000 }
   );
   if (res.data.status === 'stream' || res.data.status === 'redirect') {
     return {
@@ -175,50 +257,7 @@ async function tryNativeFallback(url, platform) {
   }
   throw new Error(`No native fallback for ${platform}`);
 }
-
-const rateLimitMap = new Map();
-function isRateLimited(ip) {
-  const now = Date.now();
-  const windowMs = 60 * 1000;
-  const maxRequests = 15;
-  if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
-  const requests = rateLimitMap.get(ip).filter((t) => now - t < windowMs);
-  if (requests.length >= maxRequests) return true;
-  requests.push(now);
-  rateLimitMap.set(ip, requests);
-  return false;
-}
-
-exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json',
-  };
-
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-
-  const ip = event.headers['x-forwarded-for'] || 'unknown';
-  if (isRateLimited(ip)) return { statusCode: 429, headers, body: JSON.stringify({ error: 'Too many requests. Please wait 60 seconds.' }) };
-
-  let url;
-  try {
-    const body = JSON.parse(event.body || '{}');
-    url = body.url?.trim();
-    if (!url) throw new Error('No URL');
-    new URL(url);
-  } catch {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid URL provided.' }) };
-  }
-
-  const platform = detectPlatform(url);
-  const layers = [
-    { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
-    { name: 'cobalt', fn: () => tryCobalt(url) },
-    { name: 'native', fn: () => tryNativeFallback(url, platform) },
-  ];
-
+...
   let lastError = null;
   for (const layer of layers) {
     try {
@@ -227,8 +266,19 @@ exports.handler = async (event) => {
       console.log(`[${platform}] Success via: ${layer.name}`);
       return { statusCode: 200, headers, body: JSON.stringify({ ...result, platform }) };
     } catch (err) {
-      console.log(`[${platform}] Layer ${layer.name} failed: ${err.message}`);
-      lastError = err.message;
+      const status = err?.response?.status;
+      const message = err?.message || 'Unknown error';
+      const fullMessage = status ? `${message} (status ${status})` : message;
+      console.log(`[${platform}] Layer ${layer.name} failed: ${fullMessage}`);
+
+      if (err?.response?.data) {
+        const payload = typeof err.response.data === 'string'
+          ? err.response.data
+          : JSON.stringify(err.response.data);
+        console.log(`[${platform}] Layer ${layer.name} response: ${payload.slice(0, 300)}`);
+      }
+
+      lastError = fullMessage;
     }
   }
 
