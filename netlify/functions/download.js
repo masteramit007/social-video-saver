@@ -422,12 +422,30 @@ async function tryOEmbed(url, oembedEndpoint) {
 async function tryNativeFallback(url, platform) {
   // ---------- Reddit ----------
   if (platform === 'reddit') {
-    const jsonUrl = url.replace(/\/?(\?.*)?$/, '.json$1');
-    const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
-    const post = res.data?.[0]?.data?.children?.[0]?.data;
+    // Normalize URL: strip trailing slash, query params, ensure .json
+    let cleanUrl = url.split('?')[0].replace(/\/+$/, '');
+    // Handle short links like redd.it
+    if (/redd\.it/.test(cleanUrl)) {
+      const resolved = await axios.get(cleanUrl, { maxRedirects: 5, timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      cleanUrl = (resolved.request?.res?.responseUrl || resolved.headers?.location || cleanUrl).split('?')[0].replace(/\/+$/, '');
+    }
+    const jsonUrl = cleanUrl + '.json';
+    const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 8000 });
+    const listing = Array.isArray(res.data) ? res.data : [res.data];
+    const post = listing[0]?.data?.children?.[0]?.data;
+    if (!post) throw new Error('Reddit: could not parse post data');
     const videoUrl = getRedditVideoUrl(post);
-    if (!videoUrl) throw new Error('Reddit: no video found');
-    return { title: post?.title || 'Reddit Video', thumbnail: post?.thumbnail || null, formats: [{ quality: 'HD', url: videoUrl, ext: 'mp4' }], source: 'native-reddit' };
+    // Also check for gif/image posts
+    const gifUrl = post?.preview?.images?.[0]?.variants?.mp4?.source?.url?.replace(/&amp;/g, '&');
+    const mediaUrl = videoUrl || gifUrl;
+    if (!mediaUrl) throw new Error('Reddit: no video found in post');
+    const formats = [{ quality: 'HD', url: mediaUrl, ext: 'mp4' }];
+    // Try to get audio track for Reddit videos (they split audio/video)
+    if (videoUrl) {
+      const audioUrl = videoUrl.replace(/DASH_\d+\.mp4/, 'DASH_audio.mp4').replace(/DASH_\d+/, 'DASH_audio');
+      formats.push({ quality: 'audio', url: audioUrl, ext: 'mp4', type: 'audio' });
+    }
+    return { title: post?.title || 'Reddit Video', thumbnail: (post?.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default') ? post.thumbnail : null, formats, source: 'native-reddit' };
   }
 
   // ---------- X / Twitter ----------
