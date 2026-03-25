@@ -422,12 +422,30 @@ async function tryOEmbed(url, oembedEndpoint) {
 async function tryNativeFallback(url, platform) {
   // ---------- Reddit ----------
   if (platform === 'reddit') {
-    const jsonUrl = url.replace(/\/?(\?.*)?$/, '.json$1');
-    const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
-    const post = res.data?.[0]?.data?.children?.[0]?.data;
+    // Normalize URL: strip trailing slash, query params, ensure .json
+    let cleanUrl = url.split('?')[0].replace(/\/+$/, '');
+    // Handle short links like redd.it
+    if (/redd\.it/.test(cleanUrl)) {
+      const resolved = await axios.get(cleanUrl, { maxRedirects: 5, timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      cleanUrl = (resolved.request?.res?.responseUrl || resolved.headers?.location || cleanUrl).split('?')[0].replace(/\/+$/, '');
+    }
+    const jsonUrl = cleanUrl + '.json';
+    const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 8000 });
+    const listing = Array.isArray(res.data) ? res.data : [res.data];
+    const post = listing[0]?.data?.children?.[0]?.data;
+    if (!post) throw new Error('Reddit: could not parse post data');
     const videoUrl = getRedditVideoUrl(post);
-    if (!videoUrl) throw new Error('Reddit: no video found');
-    return { title: post?.title || 'Reddit Video', thumbnail: post?.thumbnail || null, formats: [{ quality: 'HD', url: videoUrl, ext: 'mp4' }], source: 'native-reddit' };
+    // Also check for gif/image posts
+    const gifUrl = post?.preview?.images?.[0]?.variants?.mp4?.source?.url?.replace(/&amp;/g, '&');
+    const mediaUrl = videoUrl || gifUrl;
+    if (!mediaUrl) throw new Error('Reddit: no video found in post');
+    const formats = [{ quality: 'HD', url: mediaUrl, ext: 'mp4' }];
+    // Try to get audio track for Reddit videos (they split audio/video)
+    if (videoUrl) {
+      const audioUrl = videoUrl.replace(/DASH_\d+\.mp4/, 'DASH_audio.mp4').replace(/DASH_\d+/, 'DASH_audio');
+      formats.push({ quality: 'audio', url: audioUrl, ext: 'mp4', type: 'audio' });
+    }
+    return { title: post?.title || 'Reddit Video', thumbnail: (post?.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default') ? post.thumbnail : null, formats, source: 'native-reddit' };
   }
 
   // ---------- X / Twitter ----------
@@ -489,7 +507,26 @@ async function tryNativeFallback(url, platform) {
     if (og.videoUrl) {
       return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-pinterest' };
     }
-    throw new Error('Pinterest: no video found via OG tags');
+    // Try extracting from page JSON data
+    if (og.html) {
+      const jsonMatch = og.html.match(/{"__PWS_DATA__".*?}<\/script>/s) || og.html.match(/"video_list"\s*:\s*(\{[^}]+\})/);
+      if (jsonMatch) {
+        try {
+          const pinData = JSON.parse(jsonMatch[0].replace(/<\/script>$/, ''));
+          const videoObj = JSON.stringify(pinData).match(/"url"\s*:\s*"(https:\/\/v1?\.pinimg\.com\/videos\/[^"]+)"/);
+          if (videoObj?.[1]) {
+            return { title: og.title || 'Pinterest Video', thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: videoObj[1], ext: 'mp4' }], source: 'native-pinterest' };
+          }
+        } catch {}
+      }
+      // Also check for image pins
+      const imgMatch = og.html.match(/"(https:\/\/i\.pinimg\.com\/originals\/[^"]+)"/);
+      if (og.thumbnail || imgMatch?.[1]) {
+        const imgUrl = imgMatch?.[1] || og.thumbnail;
+        return { title: og.title || 'Pinterest Image', thumbnail: og.thumbnail, formats: [{ quality: 'Original', url: imgUrl, ext: inferExtension(imgUrl, 'jpg') }], source: 'native-pinterest', type: 'image' };
+      }
+    }
+    throw new Error('Pinterest: no media found');
   }
 
   // ---------- Tumblr ----------
@@ -713,12 +750,61 @@ async function tryNativeFallback(url, platform) {
     throw new Error('Weibo: no video found');
   }
 
+  // ---------- Instagram ----------
+  if (platform === 'instagram') {
+    // Try Instagram's oEmbed API for metadata
+    try {
+      const oembedRes = await axios.get('https://api.instagram.com/oembed/', {
+        params: { url, hidecaption: true },
+        timeout: 8000,
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      });
+      const title = oembedRes.data?.title || 'Instagram Post';
+      const thumbnail = oembedRes.data?.thumbnail_url || null;
+      // Try DDInstagram for actual video extraction
+      const ddUrl = url.replace('instagram.com', 'ddinstagram.com');
+      try {
+        const ddRes = await axios.get(ddUrl, {
+          timeout: 8000,
+          maxRedirects: 0,
+          validateStatus: (s) => s >= 200 && s < 400,
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+        });
+        const videoMatch = (typeof ddRes.data === 'string' ? ddRes.data : '').match(/<a[^>]+href="(https:\/\/[^"]*\.mp4[^"]*)"/i)
+          || (typeof ddRes.data === 'string' ? ddRes.data : '').match(/og:video:secure_url[^>]+content="([^"]+)"/i);
+        if (videoMatch?.[1]) {
+          return { title, thumbnail, formats: [{ quality: 'HD', url: videoMatch[1], ext: 'mp4' }], source: 'native-instagram' };
+        }
+      } catch {}
+      // If we at least got metadata, return with thumbnail
+      if (thumbnail) {
+        return { title, thumbnail, formats: [{ quality: 'Image', url: thumbnail, ext: 'jpg' }], source: 'native-instagram', type: 'image' };
+      }
+    } catch {}
+    throw new Error('Instagram: requires login for video content. Primary extractors handle this.');
+  }
+
+  // ---------- Facebook ----------
+  if (platform === 'facebook') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-facebook' };
+    }
+    // Try extracting from page source - Facebook embeds video URLs in JSON
+    if (og.html) {
+      const sdMatch = og.html.match(/"sd_src(?:_no_ratelimit)?"\s*:\s*"([^"]+)"/);
+      const hdMatch = og.html.match(/"hd_src(?:_no_ratelimit)?"\s*:\s*"([^"]+)"/);
+      const formats = [];
+      if (hdMatch?.[1]) formats.push({ quality: 'HD', url: hdMatch[1].replace(/\\\//g, '/'), ext: 'mp4' });
+      if (sdMatch?.[1]) formats.push({ quality: 'SD', url: sdMatch[1].replace(/\\\//g, '/'), ext: 'mp4' });
+      if (formats.length) {
+        return { title: og.title || 'Facebook Video', thumbnail: og.thumbnail, formats, source: 'native-facebook' };
+      }
+    }
+    throw new Error('Facebook: video not publicly accessible');
+  }
+
   // ---------- GENERIC OG FALLBACK for all remaining platforms ----------
-  // This catches: instagram, facebook, tiktok, douyin, capcut, hipi, xiaohongshu,
-  // snapchat, threads, bluesky, kick, dlive, rumble, kuaishou, qq, sohu, ixigua,
-  // meipai, sina, afreecatv, chzzk, telegram, imdb, linkedin, spotify, apple-music,
-  // apple-podcasts, deezer, tidal, audiomack, audius, jiosaavn, gaana, zingmp3,
-  // nhaccuatui, castbox, audioboom, acast, hearthis, jamendo, simplecast, spreaker
   try {
     const og = await scrapeOpenGraph(url);
     if (og.videoUrl) {
