@@ -224,7 +224,33 @@ async function tryAllMediaDownloader(url: string) {
   return { ...normalized, source: 'all-media-downloader' };
 }
 
-// Layer 2: Auto Download All In One (BACKUP - paid plan)
+// Layer 2: Social Download All In One (SECONDARY - paid)
+async function trySocialDownloadAllInOne(url: string) {
+  const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
+  if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
+
+  const HOST = 'social-download-all-in-one.p.rapidapi.com';
+  const res = await fetchJson(`https://${HOST}/v1/social/autolink`, {
+    method: 'POST',
+    headers: {
+      'X-RapidAPI-Key': rapidApiKey,
+      'X-RapidAPI-Host': HOST,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ url }),
+    timeout: 10000,
+  });
+
+  if (!res.ok || res.data?.error) throw new Error(res.data?.error || `API returned ${res.status}`);
+  if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed to Social Download All In One');
+
+  const normalized = normalizeRapidApiResult(res.data);
+  if (!normalized.formats.length) throw new Error('Social Download All In One returned no downloadable media');
+
+  return { ...normalized, source: 'social-download-aio' };
+}
+
+// Layer 3: Auto Download All In One (TERTIARY - paid plan)
 async function tryAutoDownloadAPI(url: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
