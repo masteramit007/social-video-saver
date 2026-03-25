@@ -49,48 +49,14 @@ Yes! Our tool never stores your videos or personal data. We simply extract the d
 
 **Is this legal?** Downloading for personal use is generally permitted, but always respect the creator's rights and don't redistribute content commercially.
   `,
-  'instagram-reels-downloader-guide': `
-Instagram Reels have become a major content format, competing directly with TikTok for short-form video dominance. If you want to save Instagram Reels for offline viewing, our free downloader makes it simple.
-
-## Supported Instagram Content
-
-Our tool supports multiple Instagram video formats:
-- **Reels** — Short-form vertical videos
-- **Stories** — Temporary 24-hour content (public accounts only)
-- **IGTV** — Long-form vertical videos
-- **Feed Videos** — Standard post videos
-
-## How to Download Instagram Reels
-
-1. Open Instagram and navigate to the Reel
-2. Tap the three dots (⋯) menu
-3. Select "Copy Link"
-4. Paste the URL into our downloader
-5. Click Download and save the video
-
-## Quality and Format
-
-Instagram Reels are typically available in 720p or 1080p quality. We always provide the highest quality available from Instagram's servers.
-
-## Important Notes
-
-- Only public content can be downloaded
-- Private account content is not accessible
-- Instagram may change their API which can temporarily affect our service
-- Always respect content creators and their intellectual property
-
-## Why Use Our Tool?
-
-Unlike many Instagram downloaders that are filled with ads and fake download buttons, our tool provides a clean, straightforward experience. Paste the link, click download, and you're done.
-  `,
 };
 
 // Generate generic content for other posts
 const getContent = (slug: string): string => {
   if (blogContent[slug]) return blogContent[slug];
   const post = blogPosts.find(p => p.slug === slug);
-  return `
-${post?.excerpt || ''}
+  return \`
+\${post?.excerpt || ''}
 
 ## Overview
 
@@ -132,7 +98,7 @@ We take your privacy seriously. Our tool never stores your videos, doesn't requi
 ## Conclusion
 
 Downloading social media videos doesn't have to be complicated. Our free tool makes it simple, fast, and safe. Try it today and save your favorite videos for offline viewing.
-  `;
+  \`;
 };
 
 const BlogPost: React.FC = () => {
@@ -160,16 +126,16 @@ const BlogPost: React.FC = () => {
 
   // Convert markdown-like content to simple HTML
   const renderContent = (text: string) => {
-    return text.split('\n').map((line, i) => {
+    return text.split('\\n').map((line, i) => {
       const trimmed = line.trim();
       if (trimmed.startsWith('## ')) return <h2 key={i} className="font-orbitron text-lg font-bold neon-text-purple mt-8 mb-3">{trimmed.slice(3)}</h2>;
       if (trimmed.startsWith('### ')) return <h3 key={i} className="font-orbitron text-base font-bold mt-6 mb-2">{trimmed.slice(4)}</h3>;
       if (trimmed.startsWith('- **')) {
-        const match = trimmed.match(/- \*\*(.+?)\*\* — (.+)/);
+        const match = trimmed.match(/- \\*\\*(.+?)\\*\\* — (.+)/);
         if (match) return <li key={i} className="text-sm text-foreground/80 mb-1"><strong>{match[1]}</strong> — {match[2]}</li>;
       }
       if (trimmed.startsWith('- ')) return <li key={i} className="text-sm text-foreground/80 mb-1 ml-4">{trimmed.slice(2)}</li>;
-      if (/^\d+\. /.test(trimmed)) return <li key={i} className="text-sm text-foreground/80 mb-1 ml-4 list-decimal">{trimmed.replace(/^\d+\. /, '')}</li>;
+      if (/^\\d+\\. /.test(trimmed)) return <li key={i} className="text-sm text-foreground/80 mb-1 ml-4 list-decimal">{trimmed.replace(/^\\d+\\. /, '')}</li>;
       if (trimmed.startsWith('**') && trimmed.endsWith('**')) return <p key={i} className="text-sm font-bold mt-4 mb-1">{trimmed.slice(2, -2)}</p>;
       if (trimmed === '') return <br key={i} />;
       return <p key={i} className="text-sm text-foreground/80 leading-relaxed mb-2">{trimmed}</p>;
@@ -178,7 +144,7 @@ const BlogPost: React.FC = () => {
 
   return (
     <>
-      <SEOHead title={post.title} description={post.excerpt} canonical={`https://socialmediavideodownloader.com/blog/${slug}`} jsonLd={jsonLd} />
+      <SEOHead title={post.title} description={post.excerpt} canonical={\`https://socialmediavideodownloader.com/blog/\${slug}\`} jsonLd={jsonLd} />
       <div className="relative z-10 pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-3xl">
           {/* Breadcrumb */}
@@ -210,7 +176,7 @@ const BlogPost: React.FC = () => {
           {/* Share */}
           <div className="mt-10 glass p-4 flex items-center gap-3">
             <span className="text-sm text-muted-foreground">Share:</span>
-            {['Twitter', 'Facebook', 'WhatsApp'].map(s => (
+            {['WhatsApp', 'Reddit', 'Copy Link'].map(s => (
               <button key={s} className="glass px-3 py-1.5 text-xs text-foreground/60 hover:text-foreground transition-colors">{s}</button>
             ))}
           </div>
@@ -220,7 +186,7 @@ const BlogPost: React.FC = () => {
             <h3 className="font-orbitron text-lg font-bold mb-4">Related Posts</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {related.map(p => (
-                <Link key={p.slug} to={`/blog/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
+                <Link key={p.slug} to={\`/blog/\${p.slug}\`} className="glass glass-hover p-4 transition-all duration-300">
                   <span className="text-xs text-muted-foreground">{p.date}</span>
                   <h4 className="font-orbitron text-xs font-bold mt-1">{p.title}</h4>
                 </Link>
