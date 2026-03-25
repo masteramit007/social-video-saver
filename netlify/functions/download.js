@@ -750,12 +750,61 @@ async function tryNativeFallback(url, platform) {
     throw new Error('Weibo: no video found');
   }
 
+  // ---------- Instagram ----------
+  if (platform === 'instagram') {
+    // Try Instagram's oEmbed API for metadata
+    try {
+      const oembedRes = await axios.get('https://api.instagram.com/oembed/', {
+        params: { url, hidecaption: true },
+        timeout: 8000,
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      });
+      const title = oembedRes.data?.title || 'Instagram Post';
+      const thumbnail = oembedRes.data?.thumbnail_url || null;
+      // Try DDInstagram for actual video extraction
+      const ddUrl = url.replace('instagram.com', 'ddinstagram.com');
+      try {
+        const ddRes = await axios.get(ddUrl, {
+          timeout: 8000,
+          maxRedirects: 0,
+          validateStatus: (s) => s >= 200 && s < 400,
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+        });
+        const videoMatch = (typeof ddRes.data === 'string' ? ddRes.data : '').match(/<a[^>]+href="(https:\/\/[^"]*\.mp4[^"]*)"/i)
+          || (typeof ddRes.data === 'string' ? ddRes.data : '').match(/og:video:secure_url[^>]+content="([^"]+)"/i);
+        if (videoMatch?.[1]) {
+          return { title, thumbnail, formats: [{ quality: 'HD', url: videoMatch[1], ext: 'mp4' }], source: 'native-instagram' };
+        }
+      } catch {}
+      // If we at least got metadata, return with thumbnail
+      if (thumbnail) {
+        return { title, thumbnail, formats: [{ quality: 'Image', url: thumbnail, ext: 'jpg' }], source: 'native-instagram', type: 'image' };
+      }
+    } catch {}
+    throw new Error('Instagram: requires login for video content. Primary extractors handle this.');
+  }
+
+  // ---------- Facebook ----------
+  if (platform === 'facebook') {
+    const og = await scrapeOpenGraph(url);
+    if (og.videoUrl) {
+      return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-facebook' };
+    }
+    // Try extracting from page source - Facebook embeds video URLs in JSON
+    if (og.html) {
+      const sdMatch = og.html.match(/"sd_src(?:_no_ratelimit)?"\s*:\s*"([^"]+)"/);
+      const hdMatch = og.html.match(/"hd_src(?:_no_ratelimit)?"\s*:\s*"([^"]+)"/);
+      const formats = [];
+      if (hdMatch?.[1]) formats.push({ quality: 'HD', url: hdMatch[1].replace(/\\\//g, '/'), ext: 'mp4' });
+      if (sdMatch?.[1]) formats.push({ quality: 'SD', url: sdMatch[1].replace(/\\\//g, '/'), ext: 'mp4' });
+      if (formats.length) {
+        return { title: og.title || 'Facebook Video', thumbnail: og.thumbnail, formats, source: 'native-facebook' };
+      }
+    }
+    throw new Error('Facebook: video not publicly accessible');
+  }
+
   // ---------- GENERIC OG FALLBACK for all remaining platforms ----------
-  // This catches: instagram, facebook, tiktok, douyin, capcut, hipi, xiaohongshu,
-  // snapchat, threads, bluesky, kick, dlive, rumble, kuaishou, qq, sohu, ixigua,
-  // meipai, sina, afreecatv, chzzk, telegram, imdb, linkedin, spotify, apple-music,
-  // apple-podcasts, deezer, tidal, audiomack, audius, jiosaavn, gaana, zingmp3,
-  // nhaccuatui, castbox, audioboom, acast, hearthis, jamendo, simplecast, spreaker
   try {
     const og = await scrapeOpenGraph(url);
     if (og.videoUrl) {

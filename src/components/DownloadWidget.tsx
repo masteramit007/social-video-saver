@@ -95,7 +95,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     setResult(null);
 
     try {
-      const res = await axios.post(`${API_BASE}/download`, { url }, { timeout: 20000 });
+      const res = await axios.post(`${API_BASE}/download`, { url }, { timeout: 30000 });
       setResult(res.data);
       setState('success');
     } catch (err: any) {
