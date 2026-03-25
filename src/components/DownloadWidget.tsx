@@ -122,23 +122,25 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   return (
     <div className="w-full max-w-2xl mx-auto">
       {/* Input */}
-      <div className="glass p-2 flex items-center gap-2">
+      <div className="glass p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleDownload()}
           placeholder="Paste any video or audio URL here…"
-          className="glass-input flex-1 px-4 py-3.5 text-sm bg-transparent border-0 backdrop-filter-none"
+          className="glass-input flex-1 px-4 py-3.5 text-sm bg-transparent border-0 backdrop-filter-none min-w-0"
           style={{ backdropFilter: 'none' }}
         />
-        <button onClick={handlePaste} className="glass p-3 hover:bg-foreground/5 transition-colors rounded-xl" title={t('paste_btn')}>
-          <Clipboard className="w-5 h-5 text-foreground/60" />
-        </button>
-        <button onClick={handleDownload} className="neon-btn px-6 py-3.5 text-sm flex items-center gap-2 whitespace-nowrap" disabled={state === 'loading'}>
-          <Download className="w-4 h-4" />
-          {t('download_btn')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePaste} className="glass p-3 hover:bg-foreground/5 transition-colors rounded-xl" title={t('paste_btn')}>
+            <Clipboard className="w-5 h-5 text-foreground/60" />
+          </button>
+          <button onClick={handleDownload} className="neon-btn flex-1 sm:flex-none px-6 py-3.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap" disabled={state === 'loading'}>
+            <Download className="w-4 h-4" />
+            {t('download_btn')}
+          </button>
+        </div>
       </div>
 
       {/* Platform detection badge */}
