@@ -784,6 +784,7 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
