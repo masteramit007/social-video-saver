@@ -126,16 +126,16 @@ const BlogPost: React.FC = () => {
 
   // Convert markdown-like content to simple HTML
   const renderContent = (text: string) => {
-    return text.split('\\n').map((line, i) => {
+    return text.split('\n').map((line, i) => {
       const trimmed = line.trim();
       if (trimmed.startsWith('## ')) return <h2 key={i} className="font-orbitron text-lg font-bold neon-text-purple mt-8 mb-3">{trimmed.slice(3)}</h2>;
       if (trimmed.startsWith('### ')) return <h3 key={i} className="font-orbitron text-base font-bold mt-6 mb-2">{trimmed.slice(4)}</h3>;
       if (trimmed.startsWith('- **')) {
-        const match = trimmed.match(/- \\*\\*(.+?)\\*\\* — (.+)/);
+        const match = trimmed.match(/- \*\*(.+?)\*\* — (.+)/);
         if (match) return <li key={i} className="text-sm text-foreground/80 mb-1"><strong>{match[1]}</strong> — {match[2]}</li>;
       }
       if (trimmed.startsWith('- ')) return <li key={i} className="text-sm text-foreground/80 mb-1 ml-4">{trimmed.slice(2)}</li>;
-      if (/^\\d+\\. /.test(trimmed)) return <li key={i} className="text-sm text-foreground/80 mb-1 ml-4 list-decimal">{trimmed.replace(/^\\d+\\. /, '')}</li>;
+      if (/^\d+\. /.test(trimmed)) return <li key={i} className="text-sm text-foreground/80 mb-1 ml-4 list-decimal">{trimmed.replace(/^\d+\. /, '')}</li>;
       if (trimmed.startsWith('**') && trimmed.endsWith('**')) return <p key={i} className="text-sm font-bold mt-4 mb-1">{trimmed.slice(2, -2)}</p>;
       if (trimmed === '') return <br key={i} />;
       return <p key={i} className="text-sm text-foreground/80 leading-relaxed mb-2">{trimmed}</p>;
