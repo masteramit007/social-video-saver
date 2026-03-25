@@ -181,12 +181,10 @@ async function tryAutoDownloadAPI(url: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
 
+  // Only use the working endpoint to avoid burning API quota
   const rapidApiTargets = [
-    { method: 'GET', url: `https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink?url=${encodeURIComponent(url)}`, host: 'auto-download-all-in-one.p.rapidapi.com' },
-    { method: 'POST', url: 'https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', host: 'auto-download-all-in-one.p.rapidapi.com', body: JSON.stringify({ url }), contentType: 'application/json' },
-    { method: 'GET', url: `https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink?url=${encodeURIComponent(url)}`, host: 'auto-download-all-in-one1.p.rapidapi.com' },
     { method: 'POST', url: 'https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink', host: 'auto-download-all-in-one1.p.rapidapi.com', body: JSON.stringify({ url }), contentType: 'application/json' },
-    { method: 'POST', url: 'https://auto-download-all-in-one1.p.rapidapi.com/all', host: 'auto-download-all-in-one1.p.rapidapi.com', body: new URLSearchParams({ url }).toString(), contentType: 'application/x-www-form-urlencoded' },
+    { method: 'GET', url: `https://social-media-video-downloader.p.rapidapi.com/smvd/get/all?url=${encodeURIComponent(url)}`, host: 'social-media-video-downloader.p.rapidapi.com', contentType: undefined, body: undefined },
   ];
 
   let lastError = 'unknown error';
@@ -203,10 +201,11 @@ async function tryAutoDownloadAPI(url: string) {
         method: target.method,
         headers,
         body: target.body,
-        timeout: 5000,
+        timeout: 8000,
       });
 
       if (!res.data || res.data.error) throw new Error(res.data?.error || 'API returned error');
+      if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed');
 
       const normalized = normalizeRapidApiResult(res.data);
       if (!normalized.formats.length) throw new Error('API returned no downloadable media');
@@ -219,7 +218,7 @@ async function tryAutoDownloadAPI(url: string) {
     }
   }
 
-  throw new Error(`RapidAPI failed across all endpoints: ${lastError}`);
+  throw new Error(`RapidAPI failed: ${lastError}`);
 }
 
 
