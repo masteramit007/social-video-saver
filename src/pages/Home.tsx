@@ -67,7 +67,7 @@ const Home: React.FC = () => {
         {/* Hero */}
         <section className="pt-28 pb-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="font-orbitron text-3xl md:text-5xl lg:text-6xl font-bold neon-text leading-tight mb-2">
+            <h1 className="font-orbitron text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold neon-text leading-tight mb-2">
               Download Videos & Music From Any Platform — Free
             </h1>
             <p className="font-orbitron text-lg md:text-2xl text-neon-cyan/80 mb-4">
