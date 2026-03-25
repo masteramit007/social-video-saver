@@ -17,8 +17,8 @@ const features = [
   { icon: Globe, titleKey: 'feature_platforms', descKey: 'feature_platforms_desc' },
   { icon: Smartphone, titleKey: 'feature_mobile', descKey: 'feature_mobile_desc' },
   { icon: Music, title: 'MP3 Download', desc: 'Extract audio from any video in MP3 format' },
-  { icon: Headphones, title: 'Podcast Saver', desc: 'Download podcast episodes for offline listening' },
-  { icon: Mic, title: 'Music Download', desc: 'Save tracks from Spotify, SoundCloud, and more' },
+  { icon: Headphones, title: 'Bandcamp Audio', desc: 'Download independent music from Bandcamp' },
+  { icon: Mic, title: 'Audio Extraction', desc: 'Extract audio tracks from video platforms' },
   { icon: Volume2, title: 'Lossless Quality', desc: 'Best available audio quality extraction' },
 ];
 
@@ -58,7 +58,7 @@ const Home: React.FC = () => {
     <>
       <SEOHead
         title="Download Videos & Music From Any Platform — Free"
-        description="Download videos & audio from TikTok, Instagram, Twitter, Facebook, SoundCloud, Spotify and 70+ platforms. Free, fast, HD quality, no watermark."
+        description={`Download videos & audio from TikTok, Reddit, Vimeo, Bilibili, Dailymotion and ${VIDEO_PLATFORMS.length}+ platforms. Free, fast, HD quality, no watermark.`}
         canonical={SITE}
         jsonLd={jsonLd}
       />
@@ -74,7 +74,7 @@ const Home: React.FC = () => {
               Supports {VIDEO_PLATFORMS.length}+ video platforms and {AUDIO_PLATFORMS.length} audio platforms
             </p>
             <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto mb-8">
-              Including TikTok, Instagram, Spotify, SoundCloud, Twitter, Facebook, Bilibili, Reddit, and many more
+              Including TikTok, Reddit, Vimeo, Bilibili, Dailymotion, Twitch, Pinterest, Bandcamp, and many more
             </p>
 
             <div className="flex flex-wrap justify-center gap-3 mb-10">
