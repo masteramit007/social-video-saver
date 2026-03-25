@@ -507,7 +507,26 @@ async function tryNativeFallback(url, platform) {
     if (og.videoUrl) {
       return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-pinterest' };
     }
-    throw new Error('Pinterest: no video found via OG tags');
+    // Try extracting from page JSON data
+    if (og.html) {
+      const jsonMatch = og.html.match(/{"__PWS_DATA__".*?}<\/script>/s) || og.html.match(/"video_list"\s*:\s*(\{[^}]+\})/);
+      if (jsonMatch) {
+        try {
+          const pinData = JSON.parse(jsonMatch[0].replace(/<\/script>$/, ''));
+          const videoObj = JSON.stringify(pinData).match(/"url"\s*:\s*"(https:\/\/v1?\.pinimg\.com\/videos\/[^"]+)"/);
+          if (videoObj?.[1]) {
+            return { title: og.title || 'Pinterest Video', thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: videoObj[1], ext: 'mp4' }], source: 'native-pinterest' };
+          }
+        } catch {}
+      }
+      // Also check for image pins
+      const imgMatch = og.html.match(/"(https:\/\/i\.pinimg\.com\/originals\/[^"]+)"/);
+      if (og.thumbnail || imgMatch?.[1]) {
+        const imgUrl = imgMatch?.[1] || og.thumbnail;
+        return { title: og.title || 'Pinterest Image', thumbnail: og.thumbnail, formats: [{ quality: 'Original', url: imgUrl, ext: inferExtension(imgUrl, 'jpg') }], source: 'native-pinterest', type: 'image' };
+      }
+    }
+    throw new Error('Pinterest: no media found');
   }
 
   // ---------- Tumblr ----------
