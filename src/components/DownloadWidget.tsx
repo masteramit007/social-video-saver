@@ -96,11 +96,14 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     setResult(null);
 
     try {
-      const res = await axios.post(`${API_BASE}/download`, { url }, { timeout: 30000 });
-      setResult(res.data);
+      const { data, error: fnError } = await supabase.functions.invoke('download', {
+        body: { url },
+      });
+      if (fnError) throw fnError;
+      setResult(data);
       setState('success');
     } catch (err: any) {
-      const msg = err.response?.data?.error || t('error_failed');
+      const msg = err?.message || t('error_failed');
       setError(msg);
       setState('error');
     }
