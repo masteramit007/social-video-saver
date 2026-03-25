@@ -17,8 +17,8 @@ const features = [
   { icon: Globe, titleKey: 'feature_platforms', descKey: 'feature_platforms_desc' },
   { icon: Smartphone, titleKey: 'feature_mobile', descKey: 'feature_mobile_desc' },
   { icon: Music, title: 'MP3 Download', desc: 'Extract audio from any video in MP3 format' },
-  { icon: Headphones, title: 'Podcast Saver', desc: 'Download podcast episodes for offline listening' },
-  { icon: Mic, title: 'Music Download', desc: 'Save tracks from Spotify, SoundCloud, and more' },
+  { icon: Headphones, title: 'Bandcamp Audio', desc: 'Download independent music from Bandcamp' },
+  { icon: Mic, title: 'Audio Extraction', desc: 'Extract audio tracks from video platforms' },
   { icon: Volume2, title: 'Lossless Quality', desc: 'Best available audio quality extraction' },
 ];
 

@@ -53,8 +53,6 @@ const Footer: React.FC = () => {
               <Link to="/download/china" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇨🇳 China Platforms</Link>
               <Link to="/download/india" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇮🇳 India Platforms</Link>
               <Link to="/download/russia" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇷🇺 Russia Platforms</Link>
-              <Link to="/download/korea" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇰🇷 Korea Platforms</Link>
-              <Link to="/download/turkey" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇹🇷 Turkey Platforms</Link>
               <Link to="/watermark-free-downloader" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🌍 Watermark-Free Tools</Link>
             </div>
           </div>
