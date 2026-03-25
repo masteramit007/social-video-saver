@@ -176,12 +176,56 @@ async function fetchText(url: string, options: RequestInit & { timeout?: number;
   }
 }
 
-// Layer 1: Auto Download All In One (PRIMARY - paid plan)
+// Layer 1: All Media Downloader (PRIMARY - cheap)
+async function tryAllMediaDownloader(url: string) {
+  const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
+  if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
+
+  // Detect which endpoint to use based on URL
+  const endpointMap: Record<string, string> = {
+    tiktok: 'https://all-media-downloader.p.rapidapi.com/TikTok',
+    twitter: 'https://all-media-downloader.p.rapidapi.com/Twitter',
+    youtube: 'https://all-media-downloader.p.rapidapi.com/YouTube',
+    pinterest: 'https://all-media-downloader.p.rapidapi.com/Pinterest',
+    bilibili: 'https://all-media-downloader.p.rapidapi.com/BiliBili',
+    douyin: 'https://all-media-downloader.p.rapidapi.com/douyin',
+  };
+
+  // Find matching endpoint
+  let endpoint: string | null = null;
+  for (const [platform, regex] of Object.entries(PLATFORMS)) {
+    if (regex.test(url) && endpointMap[platform]) {
+      endpoint = endpointMap[platform];
+      break;
+    }
+  }
+
+  // If no specific endpoint, skip this layer
+  if (!endpoint) throw new Error('All Media Downloader: no endpoint for this platform');
+
+  const res = await fetchJson(`${endpoint}?url=${encodeURIComponent(url)}`, {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Key': rapidApiKey,
+      'X-RapidAPI-Host': 'all-media-downloader.p.rapidapi.com',
+    },
+    timeout: 10000,
+  });
+
+  if (!res.ok || res.data?.error) throw new Error(res.data?.error || `API returned ${res.status}`);
+  if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed to All Media Downloader');
+
+  const normalized = normalizeRapidApiResult(res.data);
+  if (!normalized.formats.length) throw new Error('All Media Downloader returned no downloadable media');
+
+  return { ...normalized, source: 'all-media-downloader' };
+}
+
+// Layer 2: Auto Download All In One (BACKUP - paid plan)
 async function tryAutoDownloadAPI(url: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
 
-  // Only use the working endpoint to avoid burning API quota
   const rapidApiTargets = [
     { method: 'POST', url: 'https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink', host: 'auto-download-all-in-one1.p.rapidapi.com', body: JSON.stringify({ url }), contentType: 'application/json' },
     { method: 'GET', url: `https://social-media-video-downloader.p.rapidapi.com/smvd/get/all?url=${encodeURIComponent(url)}`, host: 'social-media-video-downloader.p.rapidapi.com', contentType: undefined, body: undefined },
@@ -218,7 +262,7 @@ async function tryAutoDownloadAPI(url: string) {
     }
   }
 
-  throw new Error(`RapidAPI failed: ${lastError}`);
+  throw new Error(`RapidAPI backup failed: ${lastError}`);
 }
 
 
@@ -740,6 +784,7 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
