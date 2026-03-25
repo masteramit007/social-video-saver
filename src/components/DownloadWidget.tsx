@@ -29,7 +29,7 @@ interface DownloadWidgetProps {
   forcePlatform?: string;
 }
 
-const API_BASE = '/.netlify/functions';
+
 
 const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   const { t } = useTranslation();
