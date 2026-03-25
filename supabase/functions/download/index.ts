@@ -181,12 +181,10 @@ async function tryAutoDownloadAPI(url: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
 
+  // Only use the working endpoint to avoid burning API quota
   const rapidApiTargets = [
-    { method: 'GET', url: `https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink?url=${encodeURIComponent(url)}`, host: 'auto-download-all-in-one.p.rapidapi.com' },
-    { method: 'POST', url: 'https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', host: 'auto-download-all-in-one.p.rapidapi.com', body: JSON.stringify({ url }), contentType: 'application/json' },
-    { method: 'GET', url: `https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink?url=${encodeURIComponent(url)}`, host: 'auto-download-all-in-one1.p.rapidapi.com' },
     { method: 'POST', url: 'https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink', host: 'auto-download-all-in-one1.p.rapidapi.com', body: JSON.stringify({ url }), contentType: 'application/json' },
-    { method: 'POST', url: 'https://auto-download-all-in-one1.p.rapidapi.com/all', host: 'auto-download-all-in-one1.p.rapidapi.com', body: new URLSearchParams({ url }).toString(), contentType: 'application/x-www-form-urlencoded' },
+    { method: 'GET', url: `https://social-media-video-downloader.p.rapidapi.com/smvd/get/all?url=${encodeURIComponent(url)}`, host: 'social-media-video-downloader.p.rapidapi.com', contentType: undefined, body: undefined },
   ];
 
   let lastError = 'unknown error';
@@ -203,10 +201,11 @@ async function tryAutoDownloadAPI(url: string) {
         method: target.method,
         headers,
         body: target.body,
-        timeout: 5000,
+        timeout: 8000,
       });
 
       if (!res.data || res.data.error) throw new Error(res.data?.error || 'API returned error');
+      if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed');
 
       const normalized = normalizeRapidApiResult(res.data);
       if (!normalized.formats.length) throw new Error('API returned no downloadable media');
@@ -219,7 +218,7 @@ async function tryAutoDownloadAPI(url: string) {
     }
   }
 
-  throw new Error(`RapidAPI failed across all endpoints: ${lastError}`);
+  throw new Error(`RapidAPI failed: ${lastError}`);
 }
 
 
@@ -276,18 +275,28 @@ async function tryXFallback(url: string) {
   const statusId = getXStatusId(url);
   if (!statusId) throw new Error('X: could not parse tweet status ID');
 
+  // Extract username from URL for endpoints that need it
+  const usernameMatch = url.match(/(?:twitter\.com|x\.com)\/([A-Za-z0-9_]+)\/status/);
+  const username = usernameMatch?.[1] || 'i';
+
   const endpoints = [
-    `https://api.vxtwitter.com/Twitter/status/${statusId}`,
-    `https://api.fxtwitter.com/status/${statusId}`,
+    { url: `https://api.vxtwitter.com/${username}/status/${statusId}`, type: 'json' as const },
+    { url: `https://api.fxtwitter.com/${username}/status/${statusId}`, type: 'json' as const },
   ];
 
   let lastError = 'unknown error';
   for (const endpoint of endpoints) {
     try {
-      const res = await fetchJson(endpoint, {
+      const res = await fetchJson(endpoint.url, {
         timeout: 8000,
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' },
       });
+
+      // Check if response is actually JSON with media data
+      if (!res.ok || !res.data || res.data?.code === 404) {
+        throw new Error('API returned no data or 404');
+      }
+
       const formats = normalizeXFormats(res.data || {});
       if (!formats.length) throw new Error('X fallback returned no downloadable media');
       return {
@@ -299,10 +308,46 @@ async function tryXFallback(url: string) {
       };
     } catch (err: unknown) {
       lastError = err instanceof Error ? err.message : 'Unknown X fallback error';
-      console.log(`[x-fallback] ${endpoint} failed: ${lastError}`);
+      console.log(`[x-fallback] ${endpoint.url} failed: ${lastError}`);
     }
   }
-  throw new Error(`X fallback failed: ${lastError}`);
+
+  // Try savetwitter.net as last resort
+  try {
+    const res = await fetchJson('https://savetwitter.net/api/ajaxSearch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+      body: `q=${encodeURIComponent(url)}&lang=en`,
+      timeout: 8000,
+    });
+    if (res.data?.status === 'ok' && res.data?.statusCode !== 404 && res.data?.data) {
+      const html = res.data.data;
+      const videoMatches = [...(html as string).matchAll(/href="(https?:\/\/[^"]*\.mp4[^"]*)"/g)];
+      if (videoMatches.length) {
+        const formats: MediaFormat[] = videoMatches.map((m, i) => ({
+          quality: i === 0 ? 'HD' : `Quality ${i + 1}`,
+          url: m[1],
+          ext: 'mp4',
+          type: 'video',
+          size: null,
+        }));
+        return {
+          title: 'X Video',
+          thumbnail: null,
+          formats,
+          source: 'native-x-savetwitter',
+          type: 'video',
+        };
+      }
+    }
+  } catch (err: unknown) {
+    console.log(`[x-fallback] savetwitter failed: ${err instanceof Error ? err.message : 'unknown'}`);
+  }
+
+  throw new Error(`X/Twitter: Could not extract video. The post may not contain video, or may be private/deleted.`);
 }
 
 async function scrapeOpenGraph(url: string) {
