@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
           <div>
             <span className="font-orbitron font-bold text-lg bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">SMVD</span>
             <p className="text-sm text-muted-foreground mt-2">{t('footer_tagline')}</p>
-            <p className="text-xs text-muted-foreground mt-4">Download videos & audio from 70+ platforms for free.</p>
+            <p className="text-xs text-muted-foreground mt-4">Download videos & audio from {VIDEO_PLATFORMS.length}+ platforms for free.</p>
           </div>
 
           {/* Video Downloaders */}
