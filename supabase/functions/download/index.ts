@@ -222,31 +222,6 @@ async function tryAutoDownloadAPI(url: string) {
   throw new Error(`RapidAPI failed across all endpoints: ${lastError}`);
 }
 
-// Layer 2: Self-hosted Cobalt
-async function tryCobalt(url: string) {
-  const cobaltUrl = Deno.env.get('COBALT_API_URL');
-  if (!cobaltUrl) throw new Error('COBALT_API_URL is not configured');
-
-  const res = await fetchJson(cobaltUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ url, vCodec: 'h264', vQuality: '720', aFormat: 'mp3', isAudioOnly: false, disableMetadata: false }),
-    timeout: 8000,
-  });
-
-  if (res.data.status === 'stream' || res.data.status === 'redirect') {
-    return {
-      title: res.data.filename || 'Video',
-      thumbnail: res.data.thumb || null,
-      formats: [
-        { quality: '720p', url: res.data.url, ext: 'mp4' },
-        { quality: 'audio', url: res.data.url, ext: 'mp3' },
-      ],
-      source: 'cobalt',
-    };
-  }
-  throw new Error('Cobalt: no stream URL');
-}
 
 // deno-lint-ignore no-explicit-any
 function getRedditVideoUrl(post: any): string | null {
@@ -670,7 +645,6 @@ Deno.serve(async (req) => {
   const platform = detectPlatform(url);
   const layers = [
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
-    { name: 'cobalt', fn: () => tryCobalt(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
