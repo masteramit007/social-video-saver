@@ -122,23 +122,25 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   return (
     <div className="w-full max-w-2xl mx-auto">
       {/* Input */}
-      <div className="glass p-2 flex items-center gap-2">
+      <div className="glass p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleDownload()}
           placeholder="Paste any video or audio URL here…"
-          className="glass-input flex-1 px-4 py-3.5 text-sm bg-transparent border-0 backdrop-filter-none"
+          className="glass-input flex-1 px-4 py-3.5 text-sm bg-transparent border-0 backdrop-filter-none min-w-0"
           style={{ backdropFilter: 'none' }}
         />
-        <button onClick={handlePaste} className="glass p-3 hover:bg-foreground/5 transition-colors rounded-xl" title={t('paste_btn')}>
-          <Clipboard className="w-5 h-5 text-foreground/60" />
-        </button>
-        <button onClick={handleDownload} className="neon-btn px-6 py-3.5 text-sm flex items-center gap-2 whitespace-nowrap" disabled={state === 'loading'}>
-          <Download className="w-4 h-4" />
-          {t('download_btn')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePaste} className="glass p-3 hover:bg-foreground/5 transition-colors rounded-xl" title={t('paste_btn')}>
+            <Clipboard className="w-5 h-5 text-foreground/60" />
+          </button>
+          <button onClick={handleDownload} className="neon-btn flex-1 sm:flex-none px-6 py-3.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap" disabled={state === 'loading'}>
+            <Download className="w-4 h-4" />
+            {t('download_btn')}
+          </button>
+        </div>
       </div>
 
       {/* Platform detection badge */}
@@ -203,17 +205,17 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       {/* Success Result */}
       {state === 'success' && result && result.platform !== 'youtube' && (
         <div className="mt-4 glass p-5">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             {result.thumbnail ? (
-              <img src={result.thumbnail} alt={result.title} className="w-32 h-20 object-cover rounded-xl" />
+              <img src={result.thumbnail} alt={result.title} className="w-full sm:w-32 h-32 sm:h-20 object-cover rounded-xl" />
             ) : isAudio ? (
-              <div className="w-32 h-20 rounded-xl bg-foreground/5 flex items-center justify-center">
+              <div className="w-full sm:w-32 h-20 rounded-xl bg-foreground/5 flex items-center justify-center">
                 <Music className="w-8 h-8 text-neon-cyan/60" />
               </div>
             ) : null}
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold truncate">{result.title}</h3>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="text-xs text-muted-foreground capitalize">{result.platform}</span>
                 {result.type === 'audio' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400">🎵 Audio</span>}
                 {result.duration && <span className="text-xs text-muted-foreground">{result.duration}</span>}
