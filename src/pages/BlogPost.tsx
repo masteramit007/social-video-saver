@@ -49,40 +49,6 @@ Yes! Our tool never stores your videos or personal data. We simply extract the d
 
 **Is this legal?** Downloading for personal use is generally permitted, but always respect the creator's rights and don't redistribute content commercially.
   `,
-  'instagram-reels-downloader-guide': `
-Instagram Reels have become a major content format, competing directly with TikTok for short-form video dominance. If you want to save Instagram Reels for offline viewing, our free downloader makes it simple.
-
-## Supported Instagram Content
-
-Our tool supports multiple Instagram video formats:
-- **Reels** — Short-form vertical videos
-- **Stories** — Temporary 24-hour content (public accounts only)
-- **IGTV** — Long-form vertical videos
-- **Feed Videos** — Standard post videos
-
-## How to Download Instagram Reels
-
-1. Open Instagram and navigate to the Reel
-2. Tap the three dots (⋯) menu
-3. Select "Copy Link"
-4. Paste the URL into our downloader
-5. Click Download and save the video
-
-## Quality and Format
-
-Instagram Reels are typically available in 720p or 1080p quality. We always provide the highest quality available from Instagram's servers.
-
-## Important Notes
-
-- Only public content can be downloaded
-- Private account content is not accessible
-- Instagram may change their API which can temporarily affect our service
-- Always respect content creators and their intellectual property
-
-## Why Use Our Tool?
-
-Unlike many Instagram downloaders that are filled with ads and fake download buttons, our tool provides a clean, straightforward experience. Paste the link, click download, and you're done.
-  `,
 };
 
 // Generate generic content for other posts
@@ -210,7 +176,7 @@ const BlogPost: React.FC = () => {
           {/* Share */}
           <div className="mt-10 glass p-4 flex items-center gap-3">
             <span className="text-sm text-muted-foreground">Share:</span>
-            {['Twitter', 'Facebook', 'WhatsApp'].map(s => (
+            {['WhatsApp', 'Reddit', 'Copy Link'].map(s => (
               <button key={s} className="glass px-3 py-1.5 text-xs text-foreground/60 hover:text-foreground transition-colors">{s}</button>
             ))}
           </div>
