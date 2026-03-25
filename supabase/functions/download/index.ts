@@ -275,47 +275,8 @@ async function tryAutoDownloadAPI(url: string) {
 
   return { ...normalized, source: 'auto-download-aio' };
 }
-  const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
-  if (!rapidApiKey) throw new Error('RAPIDAPI_KEY is not configured');
 
-  const rapidApiTargets = [
-    { method: 'POST', url: 'https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink', host: 'auto-download-all-in-one1.p.rapidapi.com', body: JSON.stringify({ url }), contentType: 'application/json' },
-    { method: 'GET', url: `https://social-media-video-downloader.p.rapidapi.com/smvd/get/all?url=${encodeURIComponent(url)}`, host: 'social-media-video-downloader.p.rapidapi.com', contentType: undefined, body: undefined },
-  ];
 
-  let lastError = 'unknown error';
-
-  for (const target of rapidApiTargets) {
-    try {
-      const headers: Record<string, string> = {
-        'X-RapidAPI-Key': rapidApiKey,
-        'X-RapidAPI-Host': target.host,
-      };
-      if (target.contentType) headers['Content-Type'] = target.contentType;
-
-      const res = await fetchJson(target.url, {
-        method: target.method,
-        headers,
-        body: target.body,
-        timeout: 8000,
-      });
-
-      if (!res.data || res.data.error) throw new Error(res.data?.error || 'API returned error');
-      if (res.data?.message === 'You are not subscribed to this API.') throw new Error('Not subscribed');
-
-      const normalized = normalizeRapidApiResult(res.data);
-      if (!normalized.formats.length) throw new Error('API returned no downloadable media');
-
-      return { ...normalized, source: 'auto-download-aio' };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown RapidAPI error';
-      lastError = message;
-      console.log(`[rapidapi:${target.host}] ${lastError}`);
-    }
-  }
-
-  throw new Error(`RapidAPI backup failed: ${lastError}`);
-}
 
 
 // deno-lint-ignore no-explicit-any
