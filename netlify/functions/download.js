@@ -1,5 +1,9 @@
 const axios = require('axios');
 
+const RATE_LIMIT_MAX = 15;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const requestBuckets = new Map();
+
 const PLATFORMS = {
   tiktok: /tiktok\.com|vm\.tiktok\.com/,
   douyin: /douyin\.com/,
@@ -149,6 +153,29 @@ async function tryAutoDownloadAPI(url) {
     },
     {
       method: 'post',
+      url: 'https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink',
+      host: 'auto-download-all-in-one.p.rapidapi.com',
+      timeout: 5000,
+      headers: { 'Content-Type': 'application/json' },
+      data: { url },
+    },
+    {
+      method: 'get',
+      url: 'https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink',
+      host: 'auto-download-all-in-one1.p.rapidapi.com',
+      timeout: 5000,
+      params: { url },
+    },
+    {
+      method: 'post',
+      url: 'https://auto-download-all-in-one1.p.rapidapi.com/v1/social/autolink',
+      host: 'auto-download-all-in-one1.p.rapidapi.com',
+      timeout: 5000,
+      headers: { 'Content-Type': 'application/json' },
+      data: { url },
+    },
+    {
+      method: 'post',
       url: 'https://auto-download-all-in-one1.p.rapidapi.com/all',
       host: 'auto-download-all-in-one1.p.rapidapi.com',
       timeout: 5000,
@@ -200,10 +227,14 @@ async function tryAutoDownloadAPI(url) {
 
 // Layer 2: Self-hosted Cobalt (Railway backup)
 async function tryCobalt(url) {
+  if (!process.env.COBALT_API_URL) {
+    throw new Error('COBALT_API_URL is not configured');
+  }
+
   const res = await axios.post(
     process.env.COBALT_API_URL,
     { url, vCodec: 'h264', vQuality: '720', aFormat: 'mp3', isAudioOnly: false, disableMetadata: false },
-    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 6000 }
+    { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 8000 }
   );
   if (res.data.status === 'stream' || res.data.status === 'redirect') {
     return {
@@ -219,15 +250,144 @@ async function tryCobalt(url) {
   throw new Error('Cobalt: no stream URL');
 }
 
+function getRedditVideoUrl(post) {
+  const candidates = [
+    post?.secure_media?.reddit_video?.fallback_url,
+    post?.media?.reddit_video?.fallback_url,
+    post?.crosspost_parent_list?.[0]?.secure_media?.reddit_video?.fallback_url,
+    post?.crosspost_parent_list?.[0]?.media?.reddit_video?.fallback_url,
+    post?.preview?.reddit_video_preview?.fallback_url,
+  ];
+
+  return candidates.find((item) => typeof item === 'string' && item.length > 0) || null;
+}
+
+function getXStatusId(url) {
+  return url.match(/(?:twitter\.com|x\.com)\/[A-Za-z0-9_]+\/status\/(\d+)/)?.[1] || null;
+}
+
+function normalizeXFormats(payload) {
+  const mediaGroups = [
+    payload?.media_extended,
+    payload?.media,
+    payload?.tweet?.media,
+    payload?.tweet?.media?.all,
+    payload?.videos,
+  ].filter(Array.isArray);
+
+  const uniqueByUrl = new Map();
+
+  const addFormat = (mediaUrl, quality = 'HD') => {
+    if (!mediaUrl || uniqueByUrl.has(mediaUrl)) return;
+    const ext = inferExtension(mediaUrl, 'mp4');
+    if (ext === 'm3u8') return;
+    uniqueByUrl.set(mediaUrl, {
+      quality,
+      url: mediaUrl,
+      ext,
+      type: 'video',
+      size: null,
+    });
+  };
+
+  for (const group of mediaGroups) {
+    for (const item of group) {
+      addFormat(item?.url || item?.download_url || item?.media_url_https || item?.src, item?.quality || item?.label || 'HD');
+
+      const variants = item?.video_info?.variants || item?.video?.variants || item?.variants || [];
+      for (const variant of variants) {
+        const bitrate = Number(variant?.bitrate || 0);
+        const quality = bitrate > 0 ? `${Math.round(bitrate / 1000)}k` : (variant?.quality || 'HD');
+        addFormat(variant?.url, quality);
+      }
+    }
+  }
+
+  return Array.from(uniqueByUrl.values());
+}
+
+async function tryXFallback(url) {
+  const statusId = getXStatusId(url);
+  if (!statusId) {
+    throw new Error('X: could not parse tweet status ID');
+  }
+
+  const endpoints = [
+    `https://api.vxtwitter.com/Twitter/status/${statusId}`,
+    `https://api.fxtwitter.com/status/${statusId}`,
+  ];
+
+  let lastError = 'unknown error';
+
+  for (const endpoint of endpoints) {
+    try {
+      const res = await axios.get(endpoint, {
+        timeout: 8000,
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      });
+
+      const formats = normalizeXFormats(res.data || {});
+      if (!formats.length) {
+        throw new Error('X fallback returned no downloadable media');
+      }
+
+      return {
+        title: res.data?.text || res.data?.tweet?.text || 'X Video',
+        thumbnail: res.data?.media_extended?.[0]?.thumbnail_url || res.data?.media?.[0]?.thumbnail_url || null,
+        formats,
+        source: 'native-x',
+        type: 'video',
+      };
+    } catch (err) {
+      const status = err?.response?.status;
+      const message = err?.message || 'Unknown X fallback error';
+      lastError = status ? `${message} (status ${status})` : message;
+      console.log(`[x-fallback] ${endpoint} failed: ${lastError}`);
+    }
+  }
+
+  throw new Error(`X fallback failed: ${lastError}`);
+}
+
+function getClientIp(event) {
+  const forwardedFor = event?.headers?.['x-forwarded-for'] || event?.headers?.['X-Forwarded-For'] || '';
+  const direct = event?.headers?.['x-nf-client-connection-ip'] || event?.headers?.['X-Nf-Client-Connection-Ip'];
+  if (direct) return String(direct).trim();
+  if (forwardedFor) return String(forwardedFor).split(',')[0].trim();
+  return 'unknown';
+}
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const bucket = requestBuckets.get(ip);
+
+  if (!bucket || now - bucket.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    requestBuckets.set(ip, { count: 1, windowStart: now });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, retryAfterSec: 0 };
+  }
+
+  if (bucket.count >= RATE_LIMIT_MAX) {
+    const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_WINDOW_MS - (now - bucket.windowStart)) / 1000));
+    return { allowed: false, remaining: 0, retryAfterSec };
+  }
+
+  bucket.count += 1;
+  requestBuckets.set(ip, bucket);
+  return { allowed: true, remaining: RATE_LIMIT_MAX - bucket.count, retryAfterSec: 0 };
+}
+
 // Layer 3: Native platform fallbacks (free, always on)
 async function tryNativeFallback(url, platform) {
   if (platform === 'reddit') {
     const jsonUrl = url.replace(/\/?$/, '.json');
     const res = await axios.get(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
     const post = res.data[0]?.data?.children[0]?.data;
-    const videoUrl = post?.secure_media?.reddit_video?.fallback_url;
+    const videoUrl = getRedditVideoUrl(post);
     if (!videoUrl) throw new Error('Reddit: no video found');
     return { title: post.title || 'Reddit Video', thumbnail: post.thumbnail || null, formats: [{ quality: 'HD', url: videoUrl, ext: 'mp4' }], source: 'native-reddit' };
+  }
+  if (platform === 'twitter') {
+    return tryXFallback(url);
   }
   if (platform === 'bilibili') {
     const bvid = url.match(/BV[\w]+/)?.[0];
@@ -257,7 +417,62 @@ async function tryNativeFallback(url, platform) {
   }
   throw new Error(`No native fallback for ${platform}`);
 }
-...
+
+exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  const ip = getClientIp(event);
+  const limit = checkRateLimit(ip);
+  if (!limit.allowed) {
+    return {
+      statusCode: 429,
+      headers: {
+        ...headers,
+        'Retry-After': String(limit.retryAfterSec),
+      },
+      body: JSON.stringify({ error: 'Too many requests. Please wait and try again.' }),
+    };
+  }
+
+  let url = '';
+  try {
+    const body = JSON.parse(event.body || '{}');
+    url = String(body?.url || '').trim();
+  } catch {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON body' }) };
+  }
+
+  if (!url) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'URL is required' }) };
+  }
+
+  try {
+    new URL(url);
+  } catch {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid URL format' }) };
+  }
+
+  const platform = detectPlatform(url);
+  const layers = [
+    { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
+    { name: 'cobalt', fn: () => tryCobalt(url) },
+    { name: 'native', fn: () => tryNativeFallback(url, platform) },
+  ];
+
   let lastError = null;
   for (const layer of layers) {
     try {
