@@ -205,17 +205,17 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       {/* Success Result */}
       {state === 'success' && result && result.platform !== 'youtube' && (
         <div className="mt-4 glass p-5">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             {result.thumbnail ? (
-              <img src={result.thumbnail} alt={result.title} className="w-32 h-20 object-cover rounded-xl" />
+              <img src={result.thumbnail} alt={result.title} className="w-full sm:w-32 h-32 sm:h-20 object-cover rounded-xl" />
             ) : isAudio ? (
-              <div className="w-32 h-20 rounded-xl bg-foreground/5 flex items-center justify-center">
+              <div className="w-full sm:w-32 h-20 rounded-xl bg-foreground/5 flex items-center justify-center">
                 <Music className="w-8 h-8 text-neon-cyan/60" />
               </div>
             ) : null}
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold truncate">{result.title}</h3>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="text-xs text-muted-foreground capitalize">{result.platform}</span>
                 {result.type === 'audio' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400">🎵 Audio</span>}
                 {result.duration && <span className="text-xs text-muted-foreground">{result.duration}</span>}
