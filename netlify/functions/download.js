@@ -225,6 +225,52 @@ async function tryAutoDownloadAPI(url) {
   throw new Error(`RapidAPI failed across all endpoints: ${lastError}`);
 }
 
+// Layer 3: yt-dlp bridge (SELF-HOSTED FAILSAFE)
+async function tryYtDlpBridge(url) {
+  if (!process.env.YTDLP_API_URL) {
+    throw new Error('YTDLP_API_URL is not configured');
+  }
+
+  const res = await axios.post(
+    process.env.YTDLP_API_URL,
+    { url },
+    { headers: { 'Content-Type': 'application/json' }, timeout: 12000 }
+  );
+
+  const normalized = normalizeRapidApiResult(res.data);
+  if (!normalized.formats.length) {
+    throw new Error('yt-dlp bridge returned no downloadable media');
+  }
+
+  return {
+    ...normalized,
+    source: 'yt-dlp-bridge',
+  };
+}
+
+// Layer 4: VidBee bridge (SELF-HOSTED FAILSAFE)
+async function tryVidBeeBridge(url) {
+  if (!process.env.VIDBEE_API_URL) {
+    throw new Error('VIDBEE_API_URL is not configured');
+  }
+
+  const res = await axios.post(
+    process.env.VIDBEE_API_URL,
+    { url },
+    { headers: { 'Content-Type': 'application/json' }, timeout: 12000 }
+  );
+
+  const normalized = normalizeRapidApiResult(res.data);
+  if (!normalized.formats.length) {
+    throw new Error('VidBee bridge returned no downloadable media');
+  }
+
+  return {
+    ...normalized,
+    source: 'vidbee-bridge',
+  };
+}
+
 // Layer 2: Self-hosted Cobalt (Railway backup)
 async function tryCobalt(url) {
   if (!process.env.COBALT_API_URL) {
@@ -874,6 +920,8 @@ exports.handler = async (event) => {
   const layers = [
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
     { name: 'cobalt', fn: () => tryCobalt(url) },
+    { name: 'yt-dlp-bridge', fn: () => tryYtDlpBridge(url) },
+    { name: 'vidbee-bridge', fn: () => tryVidBeeBridge(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 

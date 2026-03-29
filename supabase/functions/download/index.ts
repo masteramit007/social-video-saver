@@ -237,6 +237,44 @@ async function tryAutoDownloadAPI(url: string) {
   return { ...normalized, source: 'auto-download-aio' };
 }
 
+// Layer 4: yt-dlp bridge (SELF-HOSTED FAILSAFE)
+async function tryYtDlpBridge(url: string) {
+  const apiUrl = Deno.env.get('YTDLP_API_URL');
+  if (!apiUrl) throw new Error('YTDLP_API_URL is not configured');
+
+  const res = await fetchJson(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+    timeout: 12000,
+  });
+
+  if (!res.ok) throw new Error(`yt-dlp bridge returned ${res.status}`);
+  const normalized = normalizeRapidApiResult(res.data);
+  if (!normalized.formats.length) throw new Error('yt-dlp bridge returned no downloadable media');
+
+  return { ...normalized, source: 'yt-dlp-bridge' };
+}
+
+// Layer 5: VidBee bridge (SELF-HOSTED FAILSAFE)
+async function tryVidBeeBridge(url: string) {
+  const apiUrl = Deno.env.get('VIDBEE_API_URL');
+  if (!apiUrl) throw new Error('VIDBEE_API_URL is not configured');
+
+  const res = await fetchJson(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+    timeout: 12000,
+  });
+
+  if (!res.ok) throw new Error(`VidBee bridge returned ${res.status}`);
+  const normalized = normalizeRapidApiResult(res.data);
+  if (!normalized.formats.length) throw new Error('VidBee bridge returned no downloadable media');
+
+  return { ...normalized, source: 'vidbee-bridge' };
+}
+
 
 
 
@@ -761,6 +799,8 @@ Deno.serve(async (req) => {
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
+    { name: 'yt-dlp-bridge', fn: () => tryYtDlpBridge(url) },
+    { name: 'vidbee-bridge', fn: () => tryVidBeeBridge(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
   ];
 
