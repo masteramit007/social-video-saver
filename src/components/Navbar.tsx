@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Globe, ChevronDown, Download } from 'lucide-react';
+import { Menu, X, Globe, ChevronDown } from 'lucide-react';
 import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getWatermarkFreePlatforms, getVideoPlatformsByRegion } from '@/data/platforms';
 import { supportedLanguages } from '@/i18n';
 
@@ -145,10 +145,6 @@ const Navbar: React.FC = () => {
               </div>
             )}
           </div>
-          <Link to="/" className="neon-btn px-4 py-2 text-sm flex items-center gap-1.5">
-            <Download className="w-3.5 h-3.5" />
-            Download Now
-          </Link>
         </div>
 
         <button className="lg:hidden text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
@@ -192,9 +188,6 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          <Link to="/" onClick={() => setMenuOpen(false)} className="neon-btn px-4 py-3 text-sm text-center mt-4 flex items-center justify-center gap-2">
-            <Download className="w-4 h-4" /> Download Now
-          </Link>
         </div>
       )}
     </nav>
