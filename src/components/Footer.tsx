@@ -67,6 +67,7 @@ const Footer: React.FC = () => {
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
               <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
               <Link to="/sitemap" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sitemap</Link>
+              <a href="/rss.xml" className="text-sm text-muted-foreground hover:text-foreground transition-colors">RSS Feed</a>
               {supportedLanguages.slice(0, 5).map(l => (
                 <Link key={l.code} to={`/${l.code}/download/tiktok`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {l.flag} {l.name}
