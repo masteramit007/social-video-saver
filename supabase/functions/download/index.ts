@@ -275,7 +275,91 @@ async function tryVidBeeBridge(url: string) {
   return { ...normalized, source: 'vidbee-bridge' };
 }
 
+// Layer 6: Cobalt API (FREE open-source, cycles through public instances)
+const COBALT_INSTANCES = [
+  'https://cobalt-api.meowing.de',
+  'https://cobalt-backend.canine.tools',
+  'https://kityune.imput.net',
+  'https://blossom.imput.net',
+];
 
+async function tryCobaltAPI(url: string) {
+  let lastError = 'all cobalt instances failed';
+
+  for (const instance of COBALT_INSTANCES) {
+    try {
+      console.log(`[cobalt] Trying instance: ${instance}`);
+      const res = await fetchJson(instance, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'SocialMediaVideoDownload/1.0 (+https://socialmediavideodownload.com)',
+        },
+        body: JSON.stringify({
+          url,
+          videoQuality: '1080',
+          filenameStyle: 'basic',
+        }),
+        timeout: 10000,
+      });
+
+      if (res.data?.status === 'error' || res.data?.error) {
+        throw new Error(res.data?.error?.code || res.data?.text || 'Cobalt returned error');
+      }
+
+      // Cobalt returns different statuses: "tunnel", "redirect", "picker"
+      const formats: MediaFormat[] = [];
+
+      if (res.data?.status === 'redirect' && res.data?.url) {
+        formats.push({
+          quality: 'HD',
+          url: res.data.url,
+          ext: inferExtension(res.data.url, 'mp4'),
+          type: 'video',
+          size: null,
+        });
+      } else if (res.data?.status === 'tunnel' && res.data?.url) {
+        formats.push({
+          quality: 'HD',
+          url: res.data.url,
+          ext: inferExtension(res.data.url, 'mp4'),
+          type: 'video',
+          size: null,
+        });
+      } else if (res.data?.status === 'picker' && Array.isArray(res.data?.picker)) {
+        for (const item of res.data.picker) {
+          if (item?.url) {
+            formats.push({
+              quality: item?.quality || 'HD',
+              url: item.url,
+              ext: inferExtension(item.url, 'mp4'),
+              type: item?.type || 'video',
+              size: null,
+            });
+          }
+        }
+      }
+
+      if (!formats.length) throw new Error('Cobalt returned no downloadable media');
+
+      return {
+        title: res.data?.filename || 'Downloaded Media',
+        thumbnail: null,
+        duration: null,
+        platform: 'unknown',
+        type: formats[0]?.type || 'video',
+        formats,
+        source: `cobalt-${new URL(instance).hostname}`,
+      };
+    } catch (err: unknown) {
+      lastError = err instanceof Error ? err.message : 'unknown';
+      console.log(`[cobalt] Instance ${instance} failed: ${lastError}`);
+    }
+  }
+
+  throw new Error(`Cobalt API: ${lastError}`);
+}
 
 
 // deno-lint-ignore no-explicit-any
@@ -799,6 +883,7 @@ Deno.serve(async (req) => {
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
+    { name: 'cobalt', fn: () => tryCobaltAPI(url) },
     { name: 'yt-dlp-bridge', fn: () => tryYtDlpBridge(url) },
     { name: 'vidbee-bridge', fn: () => tryVidBeeBridge(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
