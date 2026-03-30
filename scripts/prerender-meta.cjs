@@ -35,6 +35,15 @@ const VIDEO_PLATFORMS = [
   { id:'lemon8', name:'Lemon8', slug:'lemon8', cat:'video', wm:false },
   { id:'ifunny', name:'iFunny', slug:'ifunny', cat:'video', wm:false },
   { id:'weibo', name:'Weibo', slug:'weibo', cat:'video', wm:false },
+  { id:'kwai', name:'Kwai', slug:'kwai', cat:'video', wm:false },
+  { id:'moj', name:'Moj', slug:'moj', cat:'video', wm:false },
+  { id:'threads', name:'Threads', slug:'threads', cat:'video', wm:false },
+  { id:'linkedin', name:'LinkedIn', slug:'linkedin', cat:'video', wm:false },
+  { id:'naver', name:'Naver', slug:'naver', cat:'video', wm:false },
+  { id:'niconico', name:'NicoNico', slug:'niconico', cat:'video', wm:false },
+  { id:'clapper', name:'Clapper', slug:'clapper', cat:'video', wm:false },
+  { id:'rumble', name:'Rumble', slug:'rumble', cat:'video', wm:false },
+  { id:'bigo', name:'Bigo Live', slug:'bigo', cat:'video', wm:false },
 ];
 
 const AUDIO_PLATFORMS = [

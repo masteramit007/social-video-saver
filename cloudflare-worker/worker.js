@@ -45,6 +45,15 @@ const P = {
   ifunny: { t: 'iFunny Video Downloader — Free HD Download 2026', d: 'Download iFunny videos and GIFs. Save funny video content from iFunny.' },
   weibo: { t: 'Weibo Video Downloader — Free HD Download 2026', d: 'Download Weibo videos from posts. Save Chinese social media video content in HD.' },
   bandcamp: { t: 'Bandcamp Audio Downloader — Free Download 2026', d: 'Download Bandcamp tracks. Save independent music for offline listening.' },
+  kwai: { t: 'Kwai Video Downloader — Save Kwai Videos HD 2026', d: 'Download videos from Kwai for free in high definition. Fast, secure, and no watermark. Save Kwai content instantly.' },
+  moj: { t: 'Moj Video Downloader — Save Moj Videos HD 2026', d: 'Download videos from Moj for free in high definition. Fast, secure, and no watermark. Save Moj content instantly.' },
+  threads: { t: 'Threads Video Downloader — Save Threads Videos HD 2026', d: 'Download videos from Threads for free in high definition. Fast, secure, and no watermark. Save Threads content instantly.' },
+  linkedin: { t: 'LinkedIn Video Downloader — Save LinkedIn Videos HD 2026', d: 'Download videos from LinkedIn for free in high definition. Fast, secure, and no watermark. Save LinkedIn content instantly.' },
+  naver: { t: 'Naver Video Downloader — Save Naver Videos HD 2026', d: 'Download videos from Naver for free in high definition. Fast, secure, and no watermark. Save Naver content instantly.' },
+  niconico: { t: 'NicoNico Video Downloader — Save NicoNico Videos HD 2026', d: 'Download videos from NicoNico for free in high definition. Fast, secure, and no watermark. Save NicoNico content instantly.' },
+  clapper: { t: 'Clapper Video Downloader — Save Clapper Videos HD 2026', d: 'Download videos from Clapper for free in high definition. Fast, secure, and no watermark. Save Clapper content instantly.' },
+  rumble: { t: 'Rumble Video Downloader — Save Rumble Videos HD 2026', d: 'Download videos from Rumble for free in high definition. Fast, secure, and no watermark. Save Rumble content instantly.' },
+  bigo: { t: 'Bigo Live Video Downloader — Save Bigo Videos HD 2026', d: 'Download videos from Bigo Live for free in high definition. Fast, secure, and no watermark. Save Bigo content instantly.' },
 };
 
 // ── Localized metadata (top platforms) ─────────────────────────────
