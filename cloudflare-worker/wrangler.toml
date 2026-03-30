@@ -1,0 +1,8 @@
+name = "smvd-prerender"
+main = "worker.js"
+compatibility_date = "2024-12-01"
+
+# Custom domain routes (update after adding domain to Cloudflare)
+# routes = [
+#   { pattern = "socialmediavideodownload.com/*", zone_name = "socialmediavideodownload.com" }
+# ]
