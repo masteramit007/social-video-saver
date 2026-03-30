@@ -45,20 +45,20 @@ const LANGS = ['en','hi','es','fr','de','pt','ar','ja','ko','zh','ru','id','tr',
 
 // SEO titles/descriptions from keywords.ts (subset for key platforms)
 const SEO_DATA = {
-  tiktok: { title: 'TikTok Video Downloader — No Watermark, Free HD 2025', desc: 'Download TikTok videos without watermark free. Best TikTok downloader online — save TikTok to MP4 or MP3 in HD. No login, no app. Works on iPhone & Android.' },
-  youtube: { title: 'YouTube Video Downloader — Free MP4 & MP3 Download Online 2025', desc: 'Free YouTube video downloader — save YouTube videos as MP4 or convert to MP3. Download YouTube Shorts, HD videos online. No software needed.' },
-  reddit: { title: 'Reddit Video Downloader — Download Reddit Videos With Audio 2025', desc: 'Download Reddit videos with audio merged. Free Reddit video downloader — save any Reddit video post in HD quality. No login required.' },
-  bilibili: { title: 'Bilibili Video Downloader — Download Bilibili Videos Free 2025', desc: 'Download Bilibili videos for international users. Free Bilibili video downloader in HD quality. No account needed.' },
-  vimeo: { title: 'Vimeo Video Downloader — Download Vimeo Videos Free HD 2025', desc: 'Download public Vimeo videos for free in HD. Multiple quality options available. No Vimeo account needed.' },
-  twitch: { title: 'Twitch Clip Downloader — Download Twitch Clips & VODs Free 2025', desc: 'Download Twitch clips and VODs. Save your favorite Twitch moments in HD quality. Free, no login required.' },
-  pinterest: { title: 'Pinterest Video Downloader — Download Video Pins Free HD 2025', desc: 'Download Pinterest videos and video pins. Save video pins in HD quality to your device. Free, no login required.' },
+  tiktok: { title: 'TikTok Video Downloader — No Watermark, Free HD 2026', desc: 'Download TikTok videos without watermark free. Best TikTok downloader online — save TikTok to MP4 or MP3 in HD. No login, no app. Works on iPhone & Android.' },
+  youtube: { title: 'YouTube Video Downloader — Free MP4 & MP3 Download Online 2026', desc: 'Free YouTube video downloader — save YouTube videos as MP4 or convert to MP3. Download YouTube Shorts, HD videos online. No software needed.' },
+  reddit: { title: 'Reddit Video Downloader — Download Reddit Videos With Audio 2026', desc: 'Download Reddit videos with audio merged. Free Reddit video downloader — save any Reddit video post in HD quality. No login required.' },
+  bilibili: { title: 'Bilibili Video Downloader — Download Bilibili Videos Free 2026', desc: 'Download Bilibili videos for international users. Free Bilibili video downloader in HD quality. No account needed.' },
+  vimeo: { title: 'Vimeo Video Downloader — Download Vimeo Videos Free HD 2026', desc: 'Download public Vimeo videos for free in HD. Multiple quality options available. No Vimeo account needed.' },
+  twitch: { title: 'Twitch Clip Downloader — Download Twitch Clips & VODs Free 2026', desc: 'Download Twitch clips and VODs. Save your favorite Twitch moments in HD quality. Free, no login required.' },
+  pinterest: { title: 'Pinterest Video Downloader — Download Video Pins Free HD 2026', desc: 'Download Pinterest videos and video pins. Save video pins in HD quality to your device. Free, no login required.' },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
 function getTitle(platform) {
   if (SEO_DATA[platform.id]) return SEO_DATA[platform.id].title;
   const type = platform.cat === 'audio' ? 'Audio' : 'Video';
-  return `${platform.name} ${type} Downloader — Free HD Download 2025`;
+  return `${platform.name} ${type} Downloader — Free HD Download 2026`;
 }
 
 function getDesc(platform) {
@@ -106,7 +106,7 @@ function main() {
   const staticPages = [
     { path: 'video-downloader', title: 'Video Downloader — Download Videos From 25+ Platforms Free', desc: 'Free video downloader for 25+ platforms including TikTok, Reddit, Vimeo, Twitch and more. HD quality, no watermark, no login required.' },
     { path: 'audio-downloader', title: 'Audio Downloader — Download Music & Audio Free', desc: 'Free audio downloader — download music and audio from Bandcamp and more. High quality MP3 downloads, no login required.' },
-    { path: 'watermark-free-downloader', title: 'Watermark-Free Video Downloader — Download Without Watermark 2025', desc: 'Download TikTok and other videos without watermark. Free watermark-free video downloader in HD quality.' },
+    { path: 'watermark-free-downloader', title: 'Watermark-Free Video Downloader — Download Without Watermark 2026', desc: 'Download TikTok and other videos without watermark. Free watermark-free video downloader in HD quality.' },
     { path: 'about', title: 'About SocialMediaVideoDownload', desc: 'Learn about SocialMediaVideoDownload.com — your free tool to download videos and audio from 25+ social media platforms.' },
     { path: 'privacy', title: 'Privacy Policy', desc: 'Privacy policy for SocialMediaVideoDownload.com. Learn how we handle your data.' },
     { path: 'terms', title: 'Terms of Service', desc: 'Terms of service for SocialMediaVideoDownload.com.' },

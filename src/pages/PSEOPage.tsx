@@ -40,7 +40,7 @@ const PSEOPage: React.FC = () => {
   }));
   hreflangs.push({ lang: 'x-default', url: englishCanonical });
 
-  const seoTitle = getPlatformSeoTitle(platform.id, currentLang) || `${platform.name} Downloader — Free ${type === 'audio' ? 'MP3' : 'HD'} 2025`;
+  const seoTitle = getPlatformSeoTitle(platform.id, currentLang) || `${platform.name} Downloader — Free ${type === 'audio' ? 'MP3' : 'HD'} 2026`;
   const seoDescription = getPlatformSeoDescription(platform.id, currentLang, type, platform.name);
   const schemaDesc = getPlatformSchemaDescription(platform.id);
   const keywords = PLATFORM_KEYWORDS[platform.id];
@@ -119,7 +119,7 @@ const PSEOPage: React.FC = () => {
               {keywords?.h1 || `${platform.name} ${type === 'audio' ? '' : 'Video '}Downloader`}
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              {platform.description} Free, no login required. Works on iPhone, Android and PC in 2025.
+              {platform.description} Free, no login required. Works on iPhone, Android and PC in 2026.
             </p>
           </div>
 

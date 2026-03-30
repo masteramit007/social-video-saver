@@ -8,7 +8,7 @@ const Terms: React.FC = () => (
       <div className="container mx-auto max-w-3xl">
         <h1 className="font-orbitron text-3xl font-bold neon-text mb-8">Terms of Service</h1>
         <div className="glass p-8 space-y-4 text-sm text-foreground/80 leading-relaxed">
-          <p><strong>Last updated:</strong> January 1, 2025</p>
+          <p><strong>Last updated:</strong> January 1, 2026</p>
           <h2 className="font-orbitron text-lg font-bold neon-text-purple pt-4">Acceptance of Terms</h2>
           <p>By using SocialMediaVideoDownloader.com, you agree to these terms. If you do not agree, please do not use our service.</p>
           <h2 className="font-orbitron text-lg font-bold neon-text-purple pt-4">Service Description</h2>

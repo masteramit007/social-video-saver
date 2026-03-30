@@ -5,7 +5,7 @@ import AdSlot from '@/components/AdSlot';
 import { blogPosts } from '@/pages/BlogIndex';
 
 const blogContent: Record<string, string> = {
-  'tiktok-video-downloader-no-watermark-2025': `
+  'tiktok-video-downloader-no-watermark-2026': `
 TikTok has become one of the most popular social media platforms in the world, with billions of videos shared daily. Many users want to save their favorite TikTok videos for offline viewing, but the official app adds a watermark to every download.
 
 ## Why Remove the TikTok Watermark?

@@ -8,7 +8,7 @@ const Privacy: React.FC = () => (
       <div className="container mx-auto max-w-3xl">
         <h1 className="font-orbitron text-3xl font-bold neon-text mb-8">Privacy Policy</h1>
         <div className="glass p-8 space-y-4 text-sm text-foreground/80 leading-relaxed">
-          <p><strong>Last updated:</strong> January 1, 2025</p>
+          <p><strong>Last updated:</strong> January 1, 2026</p>
           <h2 className="font-orbitron text-lg font-bold neon-text-purple pt-4">Information We Collect</h2>
           <p>We do not collect personal information. We do not require registration, email addresses, or any personal data to use our service.</p>
           <h2 className="font-orbitron text-lg font-bold neon-text-purple pt-4">Video Data</h2>

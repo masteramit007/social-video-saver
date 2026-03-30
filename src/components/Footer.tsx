@@ -78,7 +78,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="mt-10 pt-6 border-t border-foreground/5 text-center">
-          <p className="text-xs text-muted-foreground">© 2025 SocialMediaVideoDownload.com</p>
+          <p className="text-xs text-muted-foreground">© 2026 SocialMediaVideoDownload.com</p>
           <p className="text-xs text-muted-foreground/80 mt-1">Supports {VIDEO_PLATFORMS.length}+ video platforms and {AUDIO_PLATFORMS.length} audio platforms</p>
           <p className="text-xs text-muted-foreground/60 mt-1">Not affiliated with any social media platform</p>
         </div>
