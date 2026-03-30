@@ -36,6 +36,15 @@ const PLATFORMS: Record<string, RegExp> = {
   ifunny: /ifunny\.co/,
   weibo: /weibo\.com/,
   bandcamp: /bandcamp\.com/,
+  kwai: /kwai\.com|kw\.ai/,
+  moj: /mojapp\.in|moj\.com/,
+  threads: /threads\.net/,
+  linkedin: /linkedin\.com/,
+  naver: /naver\.com|tv\.naver\.com/,
+  niconico: /nicovideo\.jp|nico\.ms/,
+  clapper: /clapper\.com/,
+  rumble: /rumble\.com/,
+  bigo: /bigo\.tv|bigolive\.com/,
 };
 
 function detectPlatform(url: string): string {

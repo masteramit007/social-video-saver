@@ -58,7 +58,7 @@ const Home: React.FC = () => {
     <>
       <SEOHead
         title="Download Videos & Music From Any Platform — Free"
-        description={`Download videos & audio from TikTok, Reddit, Vimeo, Bilibili, Dailymotion and ${VIDEO_PLATFORMS.length}+ platforms. Free, fast, HD quality, no watermark.`}
+        description={`Download videos & audio from TikTok, Reddit, Vimeo, Bilibili, Threads, Rumble, LinkedIn and ${VIDEO_PLATFORMS.length}+ platforms. Free, fast, HD quality, no watermark.`}
         canonical={SITE}
         jsonLd={jsonLd}
       />
@@ -74,7 +74,7 @@ const Home: React.FC = () => {
               Supports {VIDEO_PLATFORMS.length}+ video platforms and {AUDIO_PLATFORMS.length} audio platforms
             </p>
             <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto mb-8">
-              Including TikTok, Reddit, Vimeo, Bilibili, Dailymotion, Twitch, Pinterest, Bandcamp, and many more
+              Including TikTok, Reddit, Vimeo, Bilibili, Dailymotion, Twitch, Pinterest, Threads, Rumble, LinkedIn, Bandcamp, and many more
             </p>
 
             <div className="flex flex-wrap justify-center gap-3 mb-10">
