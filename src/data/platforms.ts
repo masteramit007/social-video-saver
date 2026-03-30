@@ -97,6 +97,15 @@ export const PLATFORM_PATTERNS: Record<string, RegExp> = {
   ifunny: /ifunny\.co/,
   weibo: /weibo\.com/,
   bandcamp: /bandcamp\.com/,
+  kwai: /kwai\.com|kw\.ai/,
+  moj: /moj\.com|mojapp\.in/,
+  threads: /threads\.net/,
+  linkedin: /linkedin\.com/,
+  naver: /naver\.com|tv\.naver\.com/,
+  niconico: /nicovideo\.jp|nico\.ms/,
+  clapper: /clapper\.com/,
+  rumble: /rumble\.com/,
+  bigo: /bigo\.tv/,
 };
 
 export function detectPlatformFromUrl(url: string): Platform | null {
