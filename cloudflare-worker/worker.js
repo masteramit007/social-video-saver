@@ -135,11 +135,11 @@ const L = {
 
 // ── Static pages ───────────────────────────────────────────────────
 const STATIC = {
-  '/': { t: 'Free Video Downloader – Save Videos from YouTube, TikTok & 25+ Sites', d: 'Download videos and audio from 25+ platforms including YouTube, TikTok, Reddit, Vimeo, Twitch and more. Fast, free, no watermark.' },
-  '/video-downloader': { t: 'Video Downloader — Download Videos From 25+ Platforms Free', d: 'Free video downloader for 25+ platforms including TikTok, Reddit, Vimeo, Twitch and more. HD quality, no watermark, no login required.' },
+  '/': { t: 'Free Video Downloader – Save Videos from YouTube, TikTok & 33+ Sites', d: 'Download videos and audio from 33+ platforms including YouTube, TikTok, Reddit, Vimeo, Twitch, Threads, Rumble, LinkedIn and more. Fast, free, no watermark.' },
+  '/video-downloader': { t: 'Video Downloader — Download Videos From 33+ Platforms Free', d: 'Free video downloader for 33+ platforms including TikTok, Reddit, Vimeo, Twitch, Threads, Rumble and more. HD quality, no watermark, no login required.' },
   '/audio-downloader': { t: 'Audio Downloader — Download Music & Audio Free', d: 'Free audio downloader — download music and audio from Bandcamp and more. High quality MP3 downloads, no login required.' },
   '/watermark-free-downloader': { t: 'Watermark-Free Video Downloader — Download Without Watermark 2026', d: 'Download TikTok and other videos without watermark. Free watermark-free video downloader in HD quality.' },
-  '/about': { t: 'About SocialMediaVideoDownload', d: 'Learn about SocialMediaVideoDownload.com — your free tool to download videos and audio from 25+ social media platforms.' },
+  '/about': { t: 'About SocialMediaVideoDownload', d: 'Learn about SocialMediaVideoDownload.com — your free tool to download videos and audio from 33+ social media platforms.' },
   '/privacy': { t: 'Privacy Policy', d: 'Privacy policy for SocialMediaVideoDownload.com.' },
   '/terms': { t: 'Terms of Service', d: 'Terms of service for SocialMediaVideoDownload.com.' },
   '/contact': { t: 'Contact Us', d: 'Contact the SocialMediaVideoDownload.com team.' },
