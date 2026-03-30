@@ -74,7 +74,7 @@ const Home: React.FC = () => {
               Supports {VIDEO_PLATFORMS.length}+ video platforms and {AUDIO_PLATFORMS.length} audio platforms
             </p>
             <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto mb-8">
-              Including TikTok, Reddit, Vimeo, Bilibili, Dailymotion, Twitch, Pinterest, Bandcamp, and many more
+              Including TikTok, Reddit, Vimeo, Bilibili, Dailymotion, Twitch, Pinterest, Threads, Rumble, LinkedIn, Bandcamp, and many more
             </p>
 
             <div className="flex flex-wrap justify-center gap-3 mb-10">
