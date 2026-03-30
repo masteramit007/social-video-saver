@@ -883,6 +883,7 @@ Deno.serve(async (req) => {
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
+    { name: 'cobalt', fn: () => tryCobaltAPI(url) },
     { name: 'yt-dlp-bridge', fn: () => tryYtDlpBridge(url) },
     { name: 'vidbee-bridge', fn: () => tryVidBeeBridge(url) },
     { name: 'native', fn: () => tryNativeFallback(url, platform) },
