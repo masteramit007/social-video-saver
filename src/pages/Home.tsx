@@ -58,7 +58,7 @@ const Home: React.FC = () => {
     <>
       <SEOHead
         title="Download Videos & Music From Any Platform — Free"
-        description={`Download videos & audio from TikTok, Reddit, Vimeo, Bilibili, Dailymotion and ${VIDEO_PLATFORMS.length}+ platforms. Free, fast, HD quality, no watermark.`}
+        description={`Download videos & audio from TikTok, Reddit, Vimeo, Bilibili, Threads, Rumble, LinkedIn and ${VIDEO_PLATFORMS.length}+ platforms. Free, fast, HD quality, no watermark.`}
         canonical={SITE}
         jsonLd={jsonLd}
       />
