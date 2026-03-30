@@ -22,6 +22,69 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Free Video Downloader – Save Videos from YouTube, TikTok &amp; 25+ Sites" />
     <meta name="twitter:description" content="Download videos and audio from 25+ platforms including YouTube, TikTok, Reddit, Vimeo, Twitch and more. Fast, free, no watermark." />
+
+    <!-- Synchronous meta-tag override for crawlers / prerenderers -->
+    <script>
+    (function(){
+      var S='SocialMediaVideoDownload.com';
+      var P={
+        tiktok:{t:'TikTok Video Downloader — No Watermark, Free HD 2026',d:'Download TikTok videos without watermark free. Best TikTok downloader online — save TikTok to MP4 or MP3 in HD. No login, no app. Works on iPhone & Android.'},
+        youtube:{t:'YouTube Video Downloader — Free MP4 & MP3 Download Online 2026',d:'Free YouTube video downloader — save YouTube videos as MP4 or convert to MP3. Download YouTube Shorts, HD videos online. No software needed.'},
+        reddit:{t:'Reddit Video Downloader — Download Reddit Videos With Audio 2026',d:'Download Reddit videos with audio merged. Free Reddit video downloader — save any Reddit video post in HD quality. No login required.'},
+        pinterest:{t:'Pinterest Video Downloader — Download Video Pins Free HD 2026',d:'Download Pinterest videos and video pins. Save video pins in HD quality to your device. Free, no login required.'},
+        bilibili:{t:'Bilibili Video Downloader — Download Bilibili Videos Free 2026',d:'Download Bilibili videos for international users. Free Bilibili video downloader in HD quality. No account needed.'},
+        vimeo:{t:'Vimeo Video Downloader — Download Vimeo Videos Free HD 2026',d:'Download public Vimeo videos for free in HD. Multiple quality options available. No Vimeo account needed.'},
+        dailymotion:{t:'Dailymotion Video Downloader — Free HD Download 2026',d:'Download Dailymotion videos in multiple qualities. Free and fast Dailymotion video downloader.'},
+        tumblr:{t:'Tumblr Video Downloader — Free HD Download 2026',d:'Download Tumblr videos from posts. Save Tumblr video content in HD quality.'},
+        twitch:{t:'Twitch Clip Downloader — Download Twitch Clips & VODs Free 2026',d:'Download Twitch clips and VODs. Save your favorite Twitch moments in HD quality. Free, no login required.'},
+        vk:{t:'VK Video Downloader — Free HD Download 2026',d:'Download VK (VKontakte) videos. Save Russian social media video content in HD quality.'},
+        ok:{t:'OK.ru Video Downloader — Free HD Download 2026',d:'Download OK.ru (Odnoklassniki) videos. Save Russian social network video content.'},
+        rutube:{t:'RuTube Video Downloader — Free HD Download 2026',d:'Download RuTube videos. Save Russian video platform content in HD quality.'},
+        '9gag':{t:'9GAG Video Downloader — Free HD Download 2026',d:'Download 9GAG videos and GIFs. Save funny video content from 9GAG.'},
+        ted:{t:'TED Talk Downloader — Free HD Download 2026',d:'Download TED Talk videos for offline viewing. Save inspiring talks in HD quality.'},
+        imgur:{t:'Imgur Video Downloader — Free HD Download 2026',d:'Download Imgur videos and GIFs. Save Imgur video content to your device.'},
+        streamable:{t:'Streamable Video Downloader — Free HD Download 2026',d:'Download Streamable videos in HD. Save short video clips from Streamable.'},
+        bitchute:{t:'BitChute Video Downloader — Free HD Download 2026',d:'Download BitChute videos for free in HD quality. Fast BitChute video downloader.'},
+        coub:{t:'Coub Video Downloader — Free HD Download 2026',d:'Download Coub looping videos. Save Coub video content to your device.'},
+        likee:{t:'Likee Video Downloader — Free HD Download 2026',d:'Download Likee short videos. Save Likee video content in HD quality.'},
+        sharechat:{t:'ShareChat Video Downloader — Free HD Download 2026',d:'Download ShareChat videos. Save Indian social media video content in HD quality.'},
+        espn:{t:'ESPN Video Downloader — Free HD Download 2026',d:'Download ESPN video clips. Save sports highlights and news clips from ESPN.'},
+        lemon8:{t:'Lemon8 Video Downloader — Free HD Download 2026',d:'Download Lemon8 videos and content. Save lifestyle video content from Lemon8.'},
+        ifunny:{t:'iFunny Video Downloader — Free HD Download 2026',d:'Download iFunny videos and GIFs. Save funny video content from iFunny.'},
+        weibo:{t:'Weibo Video Downloader — Free HD Download 2026',d:'Download Weibo videos from posts. Save Chinese social media video content in HD.'},
+        bandcamp:{t:'Bandcamp Audio Downloader — Free Download 2026',d:'Download Bandcamp tracks. Save independent music for offline listening.'}
+      };
+      var STATIC={
+        '/video-downloader':{t:'Video Downloader — Download Videos From 25+ Platforms Free',d:'Free video downloader for 25+ platforms including TikTok, Reddit, Vimeo, Twitch and more. HD quality, no watermark, no login required.'},
+        '/audio-downloader':{t:'Audio Downloader — Download Music & Audio Free',d:'Free audio downloader — download music and audio from Bandcamp and more. High quality MP3 downloads, no login required.'},
+        '/watermark-free-downloader':{t:'Watermark-Free Video Downloader — Download Without Watermark 2026',d:'Download TikTok and other videos without watermark. Free watermark-free video downloader in HD quality.'},
+        '/about':{t:'About SocialMediaVideoDownload',d:'Learn about SocialMediaVideoDownload.com — your free tool to download videos and audio from 25+ social media platforms.'},
+        '/privacy':{t:'Privacy Policy',d:'Privacy policy for SocialMediaVideoDownload.com.'},
+        '/terms':{t:'Terms of Service',d:'Terms of service for SocialMediaVideoDownload.com.'},
+        '/contact':{t:'Contact Us',d:'Contact the SocialMediaVideoDownload.com team.'},
+        '/blog':{t:'Blog — Video Download Tips & Guides',d:'Tips, guides and how-to articles about downloading videos from social media platforms.'},
+        '/sitemap':{t:'Sitemap',d:'Complete sitemap of SocialMediaVideoDownload.com.'}
+      };
+      var path=location.pathname.replace(/\/$/,'');
+      var meta=null;
+      // Match /download/:slug or /:lang/download/:slug
+      var m=path.match(/^(?:\/[a-z]{2})?\/download\/([a-z0-9-]+)$/);
+      if(m&&P[m[1]]){meta=P[m[1]];}
+      // Match /audio/:slug or /:lang/audio/:slug
+      if(!meta){m=path.match(/^(?:\/[a-z]{2})?\/audio\/([a-z0-9-]+)$/);if(m&&P[m[1]]){meta=P[m[1]];}}
+      // Static pages
+      if(!meta&&STATIC[path]){meta=STATIC[path];}
+      if(meta){
+        var ft=meta.t+' | '+S;
+        document.title=ft;
+        var desc=document.querySelector('meta[name="description"]');if(desc)desc.setAttribute('content',meta.d);
+        var ogt=document.querySelector('meta[property="og:title"]');if(ogt)ogt.setAttribute('content',meta.t);
+        var ogd=document.querySelector('meta[property="og:description"]');if(ogd)ogd.setAttribute('content',meta.d);
+        var twt=document.querySelector('meta[property="twitter:title"]')||document.querySelector('meta[name="twitter:title"]');if(twt)twt.setAttribute('content',meta.t);
+        var twd=document.querySelector('meta[property="twitter:description"]')||document.querySelector('meta[name="twitter:description"]');if(twd)twd.setAttribute('content',meta.d);
+      }
+    })();
+    </script>
 </head>
 
   <body>
