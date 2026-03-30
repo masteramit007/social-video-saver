@@ -77,7 +77,7 @@ const translations: Record<string, Record<string, string>> = {
     footer_resources: "Resources",
     footer_legal: "Legal",
     footer_disclaimer: "Not affiliated with any social media platform",
-    footer_copyright: "© 2025 SocialMediaVideoDownload.com",
+    footer_copyright: "© 2026 SocialMediaVideoDownload.com",
     footer_supports: "Supports 50+ video platforms and 21 audio platforms",
     cookie_text: "We use cookies to improve your experience.",
     cookie_accept: "Accept",

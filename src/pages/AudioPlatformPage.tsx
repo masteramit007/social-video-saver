@@ -32,7 +32,7 @@ const AudioPlatformPage: React.FC = () => {
   ];
 
   const keywords = PLATFORM_KEYWORDS[platform.id];
-  const seoTitle = keywords?.seoTitle || `${platform.name} Downloader — Download Music & Podcasts Free 2025`;
+  const seoTitle = keywords?.seoTitle || `${platform.name} Downloader — Download Music & Podcasts Free 2026`;
   const seoDescription = keywords?.seoDescription || platform.description;
   const schemaDesc = getPlatformSchemaDescription(platform.id);
   const h2s = keywords?.h2s || [];
@@ -70,7 +70,7 @@ const AudioPlatformPage: React.FC = () => {
   const related = AUDIO_PLATFORMS.filter(p => p.id !== platformId).slice(0, 3);
 
   const blogLinks: Record<string, string> = {
-    soundcloud: '/blog/how-to-download-soundcloud-tracks-free-2025',
+    soundcloud: '/blog/how-to-download-soundcloud-tracks-free-2026',
     spotify: '/blog/spotify-music-downloader-what-works',
     jiosaavn: '/blog/best-indian-music-downloaders-jiosaavn-gaana',
     gaana: '/blog/best-indian-music-downloaders-jiosaavn-gaana',

@@ -33,8 +33,8 @@ const PlatformPage: React.FC = () => {
 
   const keywords = PLATFORM_KEYWORDS[platform.id];
   const seoTitle = keywords?.seoTitle || (platform.supportsWatermarkFree
-    ? `${platform.name} Downloader — No Watermark Free 2025`
-    : `${platform.name} Video Downloader — Free HD Download 2025`);
+    ? `${platform.name} Downloader — No Watermark Free 2026`
+    : `${platform.name} Video Downloader — Free HD Download 2026`);
   const seoDescription = keywords?.seoDescription || platform.description;
   const schemaDesc = getPlatformSchemaDescription(platform.id);
   const h2s = keywords?.h2s || [];
@@ -74,7 +74,7 @@ const PlatformPage: React.FC = () => {
 
   // Relevant blog post link
   const blogLinks: Record<string, string> = {
-    tiktok: '/blog/tiktok-video-downloader-no-watermark-2025',
+    tiktok: '/blog/tiktok-video-downloader-no-watermark-2026',
     instagram: '/blog/instagram-reels-downloader-guide',
     twitter: '/blog/twitter-video-downloader-iphone-android',
     facebook: '/blog/facebook-video-downloader-private-public',
