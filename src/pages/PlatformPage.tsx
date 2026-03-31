@@ -116,6 +116,7 @@ const PlatformPage: React.FC = () => {
               </div>
               {isYouTube && <span className="px-2 py-1 text-xs rounded-full bg-neon-pink/20 text-neon-pink font-bold">{t('badge_extension')}</span>}
               {platform.supportsWatermarkFree && <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400 font-bold">Watermark-Free ✓</span>}
+              {platform.reliability === 'restricted' && <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400 font-bold">⚠ Variable</span>}
               <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-bold">📹 Video</span>
             </div>
             <h1 className="font-orbitron text-2xl md:text-4xl font-bold neon-text mb-3">
@@ -125,6 +126,19 @@ const PlatformPage: React.FC = () => {
               {seoDescription}
             </p>
           </div>
+
+          {platform.reliability === 'restricted' && (
+            <div className="glass border border-amber-500/30 p-4 mb-6 rounded-xl flex items-start gap-3">
+              <span className="text-amber-400 text-lg flex-shrink-0">⚠️</span>
+              <div>
+                <p className="text-sm font-semibold text-amber-300 mb-1">Variable Availability</p>
+                <p className="text-xs text-muted-foreground">
+                  {platform.name} actively restricts third-party downloading. Downloads may not always work due to platform-side blocking.
+                  Results can vary by region and content type. We recommend trying — if it doesn't work, the platform may be blocking access at that time.
+                </p>
+              </div>
+            </div>
+          )}
 
           <DownloadWidget forcePlatform={platform.id} />
 
