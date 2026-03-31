@@ -127,6 +127,19 @@ const PlatformPage: React.FC = () => {
             </p>
           </div>
 
+          {platform.reliability === 'restricted' && (
+            <div className="glass border border-amber-500/30 p-4 mb-6 rounded-xl flex items-start gap-3">
+              <span className="text-amber-400 text-lg flex-shrink-0">⚠️</span>
+              <div>
+                <p className="text-sm font-semibold text-amber-300 mb-1">Variable Availability</p>
+                <p className="text-xs text-muted-foreground">
+                  {platform.name} actively restricts third-party downloading. Downloads may not always work due to platform-side blocking.
+                  Results can vary by region and content type. We recommend trying — if it doesn't work, the platform may be blocking access at that time.
+                </p>
+              </div>
+            </div>
+          )}
+
           <DownloadWidget forcePlatform={platform.id} />
 
           <AdSlot format="responsive" />
