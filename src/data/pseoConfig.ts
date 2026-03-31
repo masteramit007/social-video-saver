@@ -26,7 +26,9 @@ export const PSEO_VIDEO_PLATFORMS = [
   'vimeo','dailymotion','tumblr','twitch','vk',
   'ok','rutube','9gag','ted','imgur','streamable',
   'bitchute','coub','likee','sharechat','espn',
-  'lemon8','ifunny','weibo'
+  'lemon8','ifunny','weibo','kwai','moj','threads',
+  'linkedin','naver','niconico','clapper','rumble','bigo',
+  'instagram','facebook','twitter','snapchat'
 ];
 
 export const PSEO_AUDIO_PLATFORMS = [
