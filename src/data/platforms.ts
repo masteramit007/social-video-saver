@@ -1,3 +1,5 @@
+export type PlatformReliability = 'reliable' | 'variable' | 'restricted';
+
 export interface VideoPlatform {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export interface VideoPlatform {
   description: string;
   supportsWatermarkFree: boolean;
   popular: boolean;
+  reliability?: PlatformReliability;
   howTo: string[];
   features: string[];
   faq: { q: string; a: string }[];

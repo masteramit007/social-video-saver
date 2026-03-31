@@ -116,6 +116,7 @@ const PlatformPage: React.FC = () => {
               </div>
               {isYouTube && <span className="px-2 py-1 text-xs rounded-full bg-neon-pink/20 text-neon-pink font-bold">{t('badge_extension')}</span>}
               {platform.supportsWatermarkFree && <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400 font-bold">Watermark-Free ✓</span>}
+              {platform.reliability === 'restricted' && <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400 font-bold">⚠ Variable</span>}
               <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-bold">📹 Video</span>
             </div>
             <h1 className="font-orbitron text-2xl md:text-4xl font-bold neon-text mb-3">
