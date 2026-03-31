@@ -76,6 +76,10 @@ export const AUDIO_PLATFORMS: AudioPlatform[] = [
 export const ALL_PLATFORMS: Platform[] = [...VIDEO_PLATFORMS, ...AUDIO_PLATFORMS];
 
 export const PLATFORM_PATTERNS: Record<string, RegExp> = {
+  instagram: /instagram\.com/,
+  facebook: /facebook\.com|fb\.watch/,
+  twitter: /twitter\.com|x\.com/,
+  snapchat: /snapchat\.com/,
   tiktok: /tiktok\.com|vm\.tiktok\.com/,
   youtube: /youtube\.com|youtu\.be/,
   reddit: /reddit\.com/,
