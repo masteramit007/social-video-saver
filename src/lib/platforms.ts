@@ -12,6 +12,50 @@ export interface PlatformInfo {
 
 export const platforms: PlatformInfo[] = [
   {
+    id: 'instagram', name: 'Instagram', color: '#E1306C', category: 'video',
+    regex: /instagram\.com/,
+    description: 'Download Instagram Reels, Stories and videos in HD quality.',
+    howTo: ['Open Instagram and find the post or Reel', 'Tap ⋯ → Copy Link', 'Paste the link above and click Download', 'Save the video'],
+    features: ['Reels downloads', 'Stories support', 'HD quality up to 1080p', 'No login required'],
+    faq: [
+      { q: 'Can I download Instagram Reels?', a: 'Yes, public Reels can be downloaded in HD quality.' },
+      { q: 'Do private accounts work?', a: 'No, only publicly available content can be downloaded.' },
+    ],
+  },
+  {
+    id: 'facebook', name: 'Facebook', color: '#1877F2', category: 'video',
+    regex: /facebook\.com|fb\.watch/,
+    description: 'Download Facebook videos and Reels in HD quality for free.',
+    howTo: ['Open the Facebook video', 'Click ⋯ → Copy Link', 'Paste and click Download', 'Save the video'],
+    features: ['Video & Reels downloads', 'HD quality', 'Public videos only', 'No login required'],
+    faq: [
+      { q: 'Can I download Facebook Reels?', a: 'Yes, public Facebook Reels can be downloaded.' },
+      { q: 'Do private videos work?', a: 'No, only publicly available videos are supported.' },
+    ],
+  },
+  {
+    id: 'twitter', name: 'Twitter / X', color: '#1DA1F2', category: 'video',
+    regex: /twitter\.com|x\.com/,
+    description: 'Download Twitter and X videos in HD quality for free.',
+    howTo: ['Open the tweet with video', 'Click Share → Copy Link', 'Paste and click Download', 'Save the video'],
+    features: ['Tweet video downloads', 'HD quality', 'GIF downloads', 'No login required'],
+    faq: [
+      { q: 'Can I download Twitter GIFs?', a: 'Yes, Twitter GIFs are downloaded as MP4 videos.' },
+      { q: 'What about X videos?', a: 'X (formerly Twitter) videos are fully supported.' },
+    ],
+  },
+  {
+    id: 'snapchat', name: 'Snapchat', color: '#FFFC00', category: 'video',
+    regex: /snapchat\.com/,
+    description: 'Download Snapchat Spotlight videos and public content in HD.',
+    howTo: ['Open the Snapchat Spotlight video', 'Tap Share → Copy Link', 'Paste and click Download', 'Save the video'],
+    features: ['Spotlight downloads', 'Public stories', 'HD quality', 'No account needed'],
+    faq: [
+      { q: 'Can I download Snapchat Stories?', a: 'Only public Spotlight and Discover content can be downloaded.' },
+      { q: 'Do private snaps work?', a: 'No, only publicly available content is supported.' },
+    ],
+  },
+  {
     id: 'tiktok', name: 'TikTok', color: '#ff0050', category: 'video',
     regex: /tiktok\.com/,
     description: 'Download TikTok videos without watermark in HD quality. Save any TikTok to your device instantly.',

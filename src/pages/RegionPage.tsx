@@ -15,7 +15,8 @@ const regionMeta: Record<string, { name: string; flag: string; title: string; de
 };
 
 const RegionPage: React.FC = () => {
-  const { region } = useParams<{ region: string }>();
+  const params = useParams<{ region?: string; platform?: string }>();
+  const region = params.region || params.platform;
   const meta = region ? regionMeta[region] : null;
 
   if (!meta) return <div className="relative z-10 pt-24 text-center text-foreground">Region not found</div>;

@@ -55,6 +55,7 @@ const App: React.FC = () => (
               <Route path="/download/china" element={<RegionPage />} />
               <Route path="/download/india" element={<RegionPage />} />
               <Route path="/download/russia" element={<RegionPage />} />
+              <Route path="/download/korea" element={<RegionPage />} />
               
               {/* Platform pages */}
               <Route path="/download/:platform" element={<PlatformPage />} />
