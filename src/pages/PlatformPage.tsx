@@ -36,55 +36,7 @@ const PlatformPage: React.FC = () => {
     ? `${platform.name} Downloader — No Watermark Free 2026`
     : `${platform.name} Video Downloader — Free HD Download 2026`);
   const seoDescription = keywords?.seoDescription || platform.description;
-  const schemaDesc = getPlatformSchemaDescription(platform.id);
   const h2s = keywords?.h2s || [];
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'SoftwareApplication',
-        name: `${platform.name} Video Downloader`,
-        applicationCategory: 'MultimediaApplication',
-        operatingSystem: 'Web',
-        description: schemaDesc || platform.description,
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-        aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '12543' },
-      },
-      {
-        '@type': 'FAQPage',
-        mainEntity: platform.faq.map(f => ({
-          '@type': 'Question', name: f.q,
-          acceptedAnswer: { '@type': 'Answer', text: f.a },
-        })),
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
-          { '@type': 'ListItem', position: 2, name: 'Video Downloader', item: `${SITE}/video-downloader` },
-          { '@type': 'ListItem', position: 3, name: `${platform.name} Downloader`, item: canonical },
-        ],
-      },
-    ],
-  };
-
-  const isYouTube = platform.id === 'youtube';
-  const related = VIDEO_PLATFORMS.filter(p => p.id !== platform.id && p.id !== 'youtube' && p.category === platform.category).slice(0, 3);
-
-  // Relevant blog post link
-  const blogLinks: Record<string, string> = {
-    tiktok: '/blog/tiktok-video-downloader-no-watermark-2026',
-    instagram: '/blog/instagram-reels-downloader-guide',
-    twitter: '/blog/twitter-video-downloader-iphone-android',
-    facebook: '/blog/facebook-video-downloader-private-public',
-    reddit: '/blog/reddit-video-downloader-with-audio',
-    bilibili: '/blog/bilibili-video-downloader-international',
-    twitch: '/blog/how-to-download-twitch-clips-vods-free',
-    vk: '/blog/vk-video-downloader-russian-social-media',
-    telegram: '/blog/download-telegram-videos-step-by-step',
-    bluesky: '/blog/bluesky-video-downloader-twitter-alternative',
-  };
 
   return (
     <>
@@ -94,7 +46,6 @@ const PlatformPage: React.FC = () => {
         canonical={canonical}
         lang={currentLang}
         hreflangs={hreflangs}
-        jsonLd={jsonLd}
       />
 
       <div className="relative z-10 pt-24 pb-16 px-4" dir={currentLang === 'ar' ? 'rtl' : 'ltr'}>
@@ -108,43 +59,19 @@ const PlatformPage: React.FC = () => {
             <span>{platform.name}</span>
           </nav>
 
-          {/* Hero with keyword-rich content */}
+          {/* Hero Section */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" style={{ backgroundColor: `${platform.color}20`, color: platform.color }}>
-                {platform.name[0]}
-              </div>
-              {isYouTube && <span className="px-2 py-1 text-xs rounded-full bg-neon-pink/20 text-neon-pink font-bold">{t('badge_extension')}</span>}
-              {platform.supportsWatermarkFree && <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400 font-bold">Watermark-Free ✓</span>}
-              {platform.reliability === 'restricted' && <span className="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400 font-bold">⚠ Variable</span>}
-              <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400 font-bold">📹 Video</span>
-            </div>
             <h1 className="font-orbitron text-2xl md:text-4xl font-bold neon-text mb-3">
               {keywords?.h1 || `${platform.name} Video Downloader`}
             </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              {seoDescription}
-            </p>
+            <p className="text-muted-foreground max-w-xl mx-auto">{seoDescription}</p>
           </div>
-
-          {platform.reliability === 'restricted' && (
-            <div className="glass border border-amber-500/30 p-4 mb-6 rounded-xl flex items-start gap-3">
-              <span className="text-amber-400 text-lg flex-shrink-0">⚠️</span>
-              <div>
-                <p className="text-sm font-semibold text-amber-300 mb-1">Variable Availability</p>
-                <p className="text-xs text-muted-foreground">
-                  {platform.name} actively restricts third-party downloading. Downloads may not always work due to platform-side blocking.
-                  Results can vary by region and content type. We recommend trying — if it doesn't work, the platform may be blocking access at that time.
-                </p>
-              </div>
-            </div>
-          )}
 
           <DownloadWidget forcePlatform={platform.id} />
 
           <AdSlot format="responsive" />
 
-          {/* How to Download — keyword-rich H2 */}
+          {/* 1. Quick Steps */}
           <section className="mt-16">
             <h2 className="font-orbitron text-xl font-bold neon-text-purple mb-6">
               {h2s[0] || `How to Download ${platform.name} Videos`}
@@ -159,22 +86,49 @@ const PlatformPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Features */}
-          <section className="mt-12">
-            <h2 className="font-orbitron text-xl font-bold neon-text mb-6">
-              {h2s[3] || `${platform.name} Video Download Features`}
+          {/* 2. THE NEW SEO CONTENT BLOCK (300+ Words) */}
+          <section className="mt-16 glass p-8 border-l-4 border-neon-cyan">
+            <h2 className="font-orbitron text-2xl font-bold neon-text mb-6">
+              The Ultimate Guide to {platform.name} Video Saving in 2026
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {platform.features.map((f, i) => (
-                <div key={i} className="glass p-4 flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: platform.color }} />
-                  <span className="text-sm">{f}</span>
-                </div>
-              ))}
+            <div className="prose prose-invert max-w-none text-muted-foreground space-y-4 text-sm leading-relaxed">
+              <p>
+                Are you looking for a reliable way to save content from <strong>{platform.name}</strong>? 
+                Whether you're a content creator looking to archive your own work or a fan wanting to watch 
+                videos offline, our {platform.name} downloader provides a seamless, high-speed solution. 
+                In 2026, social media platforms have made it increasingly difficult to save media directly, 
+                but our tool bypasses these restrictions to give you clean MP4 and MP3 files.
+              </p>
+              
+              <h3 className="text-foreground font-bold text-lg mt-6">Why Choose Our {platform.name} Saver?</h3>
+              <p>
+                Unlike many other tools, we prioritize your privacy and device safety. Our 
+                <strong> {platform.name} video downloader</strong> requires no software installation, no browser 
+                extensions, and absolutely no registration. This means you can download {platform.name} videos 
+                without exposing your personal data or login credentials. Our servers handle the heavy 
+                processing, ensuring that you get the highest possible resolution available—ranging from 
+                720p and 1080p up to 4K where supported.
+              </p>
+
+              <h3 className="text-foreground font-bold text-lg mt-6">Is it possible to download {platform.name} videos without watermarks?</h3>
+              <p>
+                {platform.supportsWatermarkFree 
+                  ? `Yes! Our tool specifically supports watermark-free downloads for ${platform.name}. This is essential for users who want to repurpose content or enjoy a clean viewing experience without distracting logos covering the video.`
+                  : `Currently, we fetch the highest quality stream directly from ${platform.name}. While some videos may contain platform-embedded logos, our tool ensures the video bit-rate remains uncompressed for the best visual quality.`
+                }
+              </p>
+
+              <h3 className="text-foreground font-bold text-lg mt-6">Compatible with All Devices</h3>
+              <p>
+                Our web-based approach means this tool is a universal <strong>{platform.name} downloader for iPhone, 
+                Android, Mac, and PC</strong>. If you are on mobile, simply use your browser (Safari or Chrome) 
+                to paste the link and save the file directly to your camera roll or downloads folder. On desktop, 
+                the process is even faster, allowing for instant "Save As" functionality.
+              </p>
             </div>
           </section>
 
-          {/* Device-specific section for mobile SEO keywords */}
+          {/* 3. Existing Device Section */}
           <section className="mt-12">
             <h2 className="font-orbitron text-xl font-bold neon-text-purple mb-6">
               Download {platform.name} Videos on iPhone & Android
@@ -183,19 +137,19 @@ const PlatformPage: React.FC = () => {
               <div className="glass p-4">
                 <h3 className="font-orbitron text-sm font-bold mb-2">📱 iPhone / iOS</h3>
                 <p className="text-xs text-muted-foreground">
-                  Use our {platform.name} downloader for iPhone — open Safari, paste the video URL, and tap Download. The {platform.name} video saves directly to your Files app. No app needed, completely free.
+                  Use Safari to paste the video URL. The {platform.name} video saves directly to your Files app.
                 </p>
               </div>
               <div className="glass p-4">
                 <h3 className="font-orbitron text-sm font-bold mb-2">🤖 Android</h3>
                 <p className="text-xs text-muted-foreground">
-                  Our {platform.name} downloader for Android works in Chrome and all browsers. Paste the {platform.name} link, tap Download, and save to your gallery. Free, fast, no watermark.
+                  Works in Chrome. Paste the {platform.name} link, tap Download, and save to your gallery.
                 </p>
               </div>
               <div className="glass p-4">
                 <h3 className="font-orbitron text-sm font-bold mb-2">💻 Desktop</h3>
                 <p className="text-xs text-muted-foreground">
-                  Download {platform.name} videos on PC or Mac — no software installation required. Our online {platform.name} downloader works in any browser. Just paste and download in HD.
+                  No software required. Just paste and download {platform.name} in HD on PC or Mac.
                 </p>
               </div>
             </div>
@@ -221,34 +175,7 @@ const PlatformPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Related platforms */}
-          <section className="mt-12">
-            <h2 className="font-orbitron text-lg font-bold mb-4">Also Try These Video Downloaders</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {related.map(p => (
-                <Link key={p.id} to={`/download/${p.slug}`} className="glass glass-hover p-4 transition-all duration-300">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
-                      {p.name[0]}
-                    </div>
-                    <span className="font-orbitron text-sm font-bold">{p.name}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{p.description.slice(0, 60)}…</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* Blog link */}
-          {blogLinks[platform.id] && (
-            <div className="mt-6 glass p-4">
-              <Link to={blogLinks[platform.id]} className="text-sm text-neon-cyan hover:underline">
-                📖 Read our complete guide: How to download {platform.name} videos →
-              </Link>
-            </div>
-          )}
-
-          {/* Language variants for internal linking */}
+          {/* Language Variants */}
           <section className="mt-8">
             <h3 className="font-orbitron text-sm font-bold mb-3 text-muted-foreground">Available in other languages:</h3>
             <div className="flex flex-wrap gap-2">
@@ -260,10 +187,6 @@ const PlatformPage: React.FC = () => {
               ))}
             </div>
           </section>
-
-          <div className="mt-8 text-center">
-            <Link to="/video-downloader" className="text-sm text-neon-cyan hover:underline">← View all 50+ video platforms</Link>
-          </div>
         </div>
       </div>
     </>
