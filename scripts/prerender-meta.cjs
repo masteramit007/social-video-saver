@@ -44,6 +44,8 @@ const VIDEO_PLATFORMS = [
   { id:'clapper', name:'Clapper', slug:'clapper', cat:'video', wm:false },
   { id:'rumble', name:'Rumble', slug:'rumble', cat:'video', wm:false },
   { id:'bigo', name:'Bigo Live', slug:'bigo', cat:'video', wm:false },
+  { id:'kuaishou', name:'Kuaishou', slug:'kuaishou', cat:'video', wm:false },
+  { id:'xiaohongshu', name:'XiaoHongShu', slug:'xiaohongshu', cat:'video', wm:false },
 ];
 
 const AUDIO_PLATFORMS = [
@@ -163,7 +165,7 @@ function main() {
 
   // Region pages
   const regions = [
-    { path: 'download/china', title: 'Download Chinese Platform Videos — Bilibili, Weibo & More', desc: 'Download videos from Chinese platforms including Bilibili and Weibo. Free HD downloader.' },
+    { path: 'download/china', title: 'Download Chinese Platform Videos — Bilibili, Weibo, Kuaishou, XiaoHongShu & More', desc: 'Download videos from Chinese platforms including Bilibili, Weibo, Kuaishou, and XiaoHongShu. Free HD downloader.' },
     { path: 'download/india', title: 'Download Indian Platform Videos — ShareChat & More', desc: 'Download videos from Indian social media platforms. Free HD video downloader.' },
     { path: 'download/russia', title: 'Download Russian Platform Videos — VK, OK.ru, RuTube', desc: 'Download videos from Russian platforms including VK, OK.ru, and RuTube. Free HD downloader.' },
   ];
