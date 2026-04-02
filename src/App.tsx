@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -10,6 +10,7 @@ import BackToTop from '@/components/BackToTop';
 import CookieConsent from '@/components/CookieConsent';
 import './i18n';
 
+// Lazy Loads
 const Home = lazy(() => import('./pages/Home'));
 const PlatformPage = lazy(() => import('./pages/PlatformPage'));
 const AudioPlatformPage = lazy(() => import('./pages/AudioPlatformPage'));
@@ -35,54 +36,45 @@ const Spinner = () => (
   </div>
 );
 
-const App: React.FC = () => (
+// --- THE SECRET SAUCE: EXPORTING THE ROUTES ARRAY ---
+export const routes: RouteObject[] = [
+  { path: "/", element: <Home /> },
+  { path: "/video-downloader", element: <VideoCategory /> },
+  { path: "/audio-downloader", element: <AudioCategory /> },
+  { path: "/watermark-free-downloader", element: <WatermarkFreePage /> },
+  { path: "/download/china", element: <RegionPage /> },
+  { path: "/download/india", element: <RegionPage /> },
+  { path: "/download/russia", element: <RegionPage /> },
+  { path: "/download/korea", element: <RegionPage /> },
+  { path: "/download/:platform", element: <PlatformPage /> },
+  { path: "/audio/:platform", element: <AudioPlatformPage /> },
+  { path: "/:lang/download/:platform", element: <PSEOPage /> },
+  { path: "/:lang/audio/:platform", element: <PSEOPage /> },
+  { path: "/blog", element: <BlogIndex /> },
+  { path: "/blog/:slug", element: <BlogPost /> },
+  { path: "/about", element: <About /> },
+  { path: "/privacy", element: <Privacy /> },
+  { path: "/terms", element: <Terms /> },
+  { path: "/contact", element: <Contact /> },
+  { path: "/sitemap", element: <SitemapPage /> },
+  { path: "*", element: <NotFound /> }
+];
+
+// Wrap everything EXCEPT the Router (Vite-SSG provides the router)
+const App: React.FC = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <TooltipProvider>
-        <BrowserRouter>
+        <div className="app-wrapper">
           <AnimatedBackground />
           <Navbar />
           <Suspense fallback={<Spinner />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              
-              {/* Category landing pages */}
-              <Route path="/video-downloader" element={<VideoCategory />} />
-              <Route path="/audio-downloader" element={<AudioCategory />} />
-              <Route path="/watermark-free-downloader" element={<WatermarkFreePage />} />
-              
-              {/* Region pages */}
-              <Route path="/download/china" element={<RegionPage />} />
-              <Route path="/download/india" element={<RegionPage />} />
-              <Route path="/download/russia" element={<RegionPage />} />
-              <Route path="/download/korea" element={<RegionPage />} />
-              
-              {/* Platform pages */}
-              <Route path="/download/:platform" element={<PlatformPage />} />
-              <Route path="/audio/:platform" element={<AudioPlatformPage />} />
-              
-              {/* pSEO routes — all 20 languages */}
-              <Route path="/:lang/download/:platform" element={<PSEOPage />} />
-              <Route path="/:lang/audio/:platform" element={<PSEOPage />} />
-              
-              {/* Content */}
-              <Route path="/blog" element={<BlogIndex />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              
-              {/* Static pages */}
-              <Route path="/about" element={<About />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/sitemap" element={<SitemapPage />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            {children}
           </Suspense>
           <Footer />
           <BackToTop />
           <CookieConsent />
-        </BrowserRouter>
+        </div>
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
