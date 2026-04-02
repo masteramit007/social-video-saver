@@ -28,7 +28,8 @@ export const PSEO_VIDEO_PLATFORMS = [
   'bitchute','coub','likee','sharechat','espn',
   'lemon8','ifunny','weibo','kwai','moj','threads',
   'linkedin','naver','niconico','clapper','rumble','bigo',
-  'instagram','facebook','twitter','snapchat'
+  'instagram','facebook','twitter','snapchat',
+  'kuaishou','xiaohongshu'
 ];
 
 export const PSEO_AUDIO_PLATFORMS = [

@@ -44,6 +44,8 @@ const VIDEO_PLATFORMS = [
   { id:'clapper', name:'Clapper', slug:'clapper', cat:'video', wm:false },
   { id:'rumble', name:'Rumble', slug:'rumble', cat:'video', wm:false },
   { id:'bigo', name:'Bigo Live', slug:'bigo', cat:'video', wm:false },
+  { id:'kuaishou', name:'Kuaishou', slug:'kuaishou', cat:'video', wm:false },
+  { id:'xiaohongshu', name:'XiaoHongShu', slug:'xiaohongshu', cat:'video', wm:false },
 ];
 
 const AUDIO_PLATFORMS = [

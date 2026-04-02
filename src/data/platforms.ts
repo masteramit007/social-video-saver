@@ -119,6 +119,8 @@ export const PLATFORM_PATTERNS: Record<string, RegExp> = {
   clapper: /clapper\.com/,
   rumble: /rumble\.com/,
   bigo: /bigo\.tv/,
+  kuaishou: /kuaishou\.com|gifshow\.com/,
+  xiaohongshu: /xiaohongshu\.com|xhslink\.com/,
 };
 
 export function detectPlatformFromUrl(url: string): Platform | null {
