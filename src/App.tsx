@@ -37,27 +37,51 @@ const Spinner = () => (
 );
 
 // --- THE SECRET SAUCE: EXPORTING THE ROUTES ARRAY ---
+const Layout: React.FC = () => (
+  <QueryClientProvider client={queryClient}>
+    <HelmetProvider>
+      <TooltipProvider>
+        <div className="app-wrapper">
+          <AnimatedBackground />
+          <Navbar />
+          <Suspense fallback={<Spinner />}>
+            <Outlet />
+          </Suspense>
+          <Footer />
+          <BackToTop />
+          <CookieConsent />
+        </div>
+      </TooltipProvider>
+    </HelmetProvider>
+  </QueryClientProvider>
+);
+
 export const routes: RouteObject[] = [
-  { path: "/", element: <Home /> },
-  { path: "/video-downloader", element: <VideoCategory /> },
-  { path: "/audio-downloader", element: <AudioCategory /> },
-  { path: "/watermark-free-downloader", element: <WatermarkFreePage /> },
-  { path: "/download/china", element: <RegionPage /> },
-  { path: "/download/india", element: <RegionPage /> },
-  { path: "/download/russia", element: <RegionPage /> },
-  { path: "/download/korea", element: <RegionPage /> },
-  { path: "/download/:platform", element: <PlatformPage /> },
-  { path: "/audio/:platform", element: <AudioPlatformPage /> },
-  { path: "/:lang/download/:platform", element: <PSEOPage /> },
-  { path: "/:lang/audio/:platform", element: <PSEOPage /> },
-  { path: "/blog", element: <BlogIndex /> },
-  { path: "/blog/:slug", element: <BlogPost /> },
-  { path: "/about", element: <About /> },
-  { path: "/privacy", element: <Privacy /> },
-  { path: "/terms", element: <Terms /> },
-  { path: "/contact", element: <Contact /> },
-  { path: "/sitemap", element: <SitemapPage /> },
-  { path: "*", element: <NotFound /> }
+  {
+    element: <Layout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/video-downloader", element: <VideoCategory /> },
+      { path: "/audio-downloader", element: <AudioCategory /> },
+      { path: "/watermark-free-downloader", element: <WatermarkFreePage /> },
+      { path: "/download/china", element: <RegionPage /> },
+      { path: "/download/india", element: <RegionPage /> },
+      { path: "/download/russia", element: <RegionPage /> },
+      { path: "/download/korea", element: <RegionPage /> },
+      { path: "/download/:platform", element: <PlatformPage /> },
+      { path: "/audio/:platform", element: <AudioPlatformPage /> },
+      { path: "/:lang/download/:platform", element: <PSEOPage /> },
+      { path: "/:lang/audio/:platform", element: <PSEOPage /> },
+      { path: "/blog", element: <BlogIndex /> },
+      { path: "/blog/:slug", element: <BlogPost /> },
+      { path: "/about", element: <About /> },
+      { path: "/privacy", element: <Privacy /> },
+      { path: "/terms", element: <Terms /> },
+      { path: "/contact", element: <Contact /> },
+      { path: "/sitemap", element: <SitemapPage /> },
+      { path: "*", element: <NotFound /> },
+    ],
+  },
 ];
 
 // Wrap everything EXCEPT the Router (Vite-SSG provides the router)
