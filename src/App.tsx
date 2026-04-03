@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -37,31 +37,7 @@ const Spinner = () => (
 );
 
 // --- THE SECRET SAUCE: EXPORTING THE ROUTES ARRAY ---
-export const routes: RouteObject[] = [
-  { path: "/", element: <Home /> },
-  { path: "/video-downloader", element: <VideoCategory /> },
-  { path: "/audio-downloader", element: <AudioCategory /> },
-  { path: "/watermark-free-downloader", element: <WatermarkFreePage /> },
-  { path: "/download/china", element: <RegionPage /> },
-  { path: "/download/india", element: <RegionPage /> },
-  { path: "/download/russia", element: <RegionPage /> },
-  { path: "/download/korea", element: <RegionPage /> },
-  { path: "/download/:platform", element: <PlatformPage /> },
-  { path: "/audio/:platform", element: <AudioPlatformPage /> },
-  { path: "/:lang/download/:platform", element: <PSEOPage /> },
-  { path: "/:lang/audio/:platform", element: <PSEOPage /> },
-  { path: "/blog", element: <BlogIndex /> },
-  { path: "/blog/:slug", element: <BlogPost /> },
-  { path: "/about", element: <About /> },
-  { path: "/privacy", element: <Privacy /> },
-  { path: "/terms", element: <Terms /> },
-  { path: "/contact", element: <Contact /> },
-  { path: "/sitemap", element: <SitemapPage /> },
-  { path: "*", element: <NotFound /> }
-];
-
-// Wrap everything EXCEPT the Router (Vite-SSG provides the router)
-const App: React.FC = ({ children }: any) => (
+const Layout: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <TooltipProvider>
@@ -69,7 +45,7 @@ const App: React.FC = ({ children }: any) => (
           <AnimatedBackground />
           <Navbar />
           <Suspense fallback={<Spinner />}>
-            {children}
+            <Outlet />
           </Suspense>
           <Footer />
           <BackToTop />
@@ -80,4 +56,32 @@ const App: React.FC = ({ children }: any) => (
   </QueryClientProvider>
 );
 
-export default App;
+export const routes: RouteObject[] = [
+  {
+    element: <Layout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/video-downloader", element: <VideoCategory /> },
+      { path: "/audio-downloader", element: <AudioCategory /> },
+      { path: "/watermark-free-downloader", element: <WatermarkFreePage /> },
+      { path: "/download/china", element: <RegionPage /> },
+      { path: "/download/india", element: <RegionPage /> },
+      { path: "/download/russia", element: <RegionPage /> },
+      { path: "/download/korea", element: <RegionPage /> },
+      { path: "/download/:platform", element: <PlatformPage /> },
+      { path: "/audio/:platform", element: <AudioPlatformPage /> },
+      { path: "/:lang/download/:platform", element: <PSEOPage /> },
+      { path: "/:lang/audio/:platform", element: <PSEOPage /> },
+      { path: "/blog", element: <BlogIndex /> },
+      { path: "/blog/:slug", element: <BlogPost /> },
+      { path: "/about", element: <About /> },
+      { path: "/privacy", element: <Privacy /> },
+      { path: "/terms", element: <Terms /> },
+      { path: "/contact", element: <Contact /> },
+      { path: "/sitemap", element: <SitemapPage /> },
+      { path: "*", element: <NotFound /> },
+    ],
+  },
+];
+
+export default Layout;
