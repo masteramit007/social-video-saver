@@ -186,9 +186,12 @@
         /* Twitter */
         var twt=document.querySelector('meta[name="twitter:title"]');if(twt)twt.setAttribute('content',ft);
         var twd=document.querySelector('meta[name="twitter:description"]');if(twd)twd.setAttribute('content',meta.d);
+        /* Canonical */
+        var can=document.querySelector('link[rel="canonical"]');if(can)can.setAttribute('href',canonical);
         /* OG:Image + Twitter:Image */
         var ogi=document.querySelector('meta[property="og:image"]');if(ogi)ogi.setAttribute('content',BASE+'/og-image.png');
         var twi=document.querySelector('meta[name="twitter:image"]');if(twi)twi.setAttribute('content',BASE+'/og-image.png');
+        /* OG:URL */
         var ogu=document.querySelector('meta[property="og:url"]');if(ogu)ogu.setAttribute('content',canonical);
         /* Lang */
         if(lang!=='en')document.documentElement.setAttribute('lang',lang);
