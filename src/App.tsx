@@ -84,24 +84,4 @@ export const routes: RouteObject[] = [
   },
 ];
 
-// Wrap everything EXCEPT the Router (Vite-SSG provides the router)
-const App: React.FC = ({ children }: any) => (
-  <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
-      <TooltipProvider>
-        <div className="app-wrapper">
-          <AnimatedBackground />
-          <Navbar />
-          <Suspense fallback={<Spinner />}>
-            {children}
-          </Suspense>
-          <Footer />
-          <BackToTop />
-          <CookieConsent />
-        </div>
-      </TooltipProvider>
-    </HelmetProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+export default Layout;
