@@ -11,20 +11,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="alternate" type="application/rss+xml" title="SMVD Blog RSS Feed" href="/rss.xml" />
-    <title>Free Video Downloader – Save Videos from YouTube, TikTok &amp; 25+ Sites</title>
-    <meta name="description" content="Download videos and audio from 25+ platforms including YouTube, TikTok, Reddit, Vimeo, Twitch and more. Fast, free, no watermark.">
+    <title>Social Media Video Downloader</title>
+    <meta name="description" content="Download videos and audio from 25+ platforms. Fast, free, no watermark.">
     <meta name="author" content="SocialMediaVideoDownload" />
-
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Free Video Downloader – Save Videos from YouTube, TikTok &amp; 25+ Sites" />
-    <meta property="og:description" content="Download videos and audio from 25+ platforms including YouTube, TikTok, Reddit, Vimeo, Twitch and more. Fast, free, no watermark." />
+    <meta property="og:title" content="Social Media Video Downloader" />
+    <meta property="og:description" content="Download videos and audio from 25+ platforms. Fast, free, no watermark." />
     <meta property="og:image" content="https://socialmediavideodownload.com/og-image.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Free Video Downloader – Save Videos from YouTube, TikTok &amp; 25+ Sites" />
-    <meta name="twitter:description" content="Download videos and audio from 25+ platforms including YouTube, TikTok, Reddit, Vimeo, Twitch and more. Fast, free, no watermark." />
-
-    <link rel="canonical" href="https://socialmediavideodownload.com/" />
     <meta property="og:url" content="https://socialmediavideodownload.com/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Social Media Video Downloader" />
+    <meta name="twitter:description" content="Download videos and audio from 25+ platforms. Fast, free, no watermark." />
+    <meta name="twitter:image" content="https://socialmediavideodownload.com/og-image.png" />
+    <link rel="canonical" href="https://socialmediavideodownload.com/" />
     <!-- Synchronous meta-tag override for crawlers / prerenderers -->
     <script>
     (function(){
@@ -189,6 +188,9 @@
         var twd=document.querySelector('meta[name="twitter:description"]');if(twd)twd.setAttribute('content',meta.d);
         /* Canonical */
         var can=document.querySelector('link[rel="canonical"]');if(can)can.setAttribute('href',canonical);
+        /* OG:Image + Twitter:Image */
+        var ogi=document.querySelector('meta[property="og:image"]');if(ogi)ogi.setAttribute('content',BASE+'/og-image.png');
+        var twi=document.querySelector('meta[name="twitter:image"]');if(twi)twi.setAttribute('content',BASE+'/og-image.png');
         /* OG:URL */
         var ogu=document.querySelector('meta[property="og:url"]');if(ogu)ogu.setAttribute('content',canonical);
         /* Lang */
