@@ -123,38 +123,28 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     if (!result) return;
     setDownloadingIdx(idx);
     try {
-      // Build a safe filename
       const safeTitle = (result.title || 'download')
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '_')
         .slice(0, 80);
       const filename = `${safeTitle}_${format.quality}.${format.ext}`;
 
-      // Try direct fetch first (works for same-origin / CORS-enabled)
-      try {
-        const res = await fetch(format.url, { mode: 'cors' });
-        if (!res.ok) throw new Error('fetch failed');
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-      } catch {
-        // Fallback: proxy through edge function to bypass CORS
-        const proxyUrl = `https://fbaswjlpmqaaxrivgmis.supabase.co/functions/v1/proxy-download?url=${encodeURIComponent(format.url)}&filename=${encodeURIComponent(filename)}`;
-        const a = document.createElement('a');
-        a.href = proxyUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-    } catch (err) {
-      // Last resort: open in new tab
+      // Always proxy through our edge function to avoid CORS and force download on same page
+      const proxyUrl = `https://fbaswjlpmqaaxrivgmis.supabase.co/functions/v1/proxy-download?url=${encodeURIComponent(format.url)}&filename=${encodeURIComponent(filename)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error(`Proxy error: ${res.status}`);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    } catch {
+      // Fallback: open in new tab only as last resort
       window.open(format.url, '_blank');
     } finally {
       setDownloadingIdx(null);
