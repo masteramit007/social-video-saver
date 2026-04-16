@@ -310,6 +310,8 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
           </div>
         </div>
       )}
+
+      <DownloadSuccessToast show={showSuccessToast} onClose={() => setShowSuccessToast(false)} />
     </div>
   );
 };
