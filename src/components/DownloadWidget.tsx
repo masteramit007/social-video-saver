@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, Clipboard, Copy, RefreshCw, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { detectPlatformFromUrl, VIDEO_PLATFORMS, AUDIO_PLATFORMS, type Platform } from '@/data/platforms';
 import { supabase } from '@/integrations/supabase/client';
+import DownloadSuccessToast from './DownloadSuccessToast';
 
 interface MediaFormat {
   quality: string;
@@ -39,6 +40,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   useEffect(() => {
     if (url.length > 10) {
@@ -155,6 +157,9 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       window.open(format.url, '_blank');
     } finally {
       setDownloadingIdx(null);
+      // Show celebratory toast
+      setShowSuccessToast(true);
+      window.setTimeout(() => setShowSuccessToast(false), 8000);
     }
   };
 
@@ -305,6 +310,8 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
           </div>
         </div>
       )}
+
+      <DownloadSuccessToast show={showSuccessToast} onClose={() => setShowSuccessToast(false)} />
     </div>
   );
 };
