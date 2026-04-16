@@ -38,6 +38,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
   const [result, setResult] = useState<MediaResult | null>(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
 
   useEffect(() => {
     if (url.length > 10) {
