@@ -114,6 +114,51 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
+
+  const handleForceDownload = async (e: React.MouseEvent, format: MediaFormat, idx: number) => {
+    e.preventDefault();
+    if (!result) return;
+    setDownloadingIdx(idx);
+    try {
+      // Build a safe filename
+      const safeTitle = (result.title || 'download')
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '_')
+        .slice(0, 80);
+      const filename = `${safeTitle}_${format.quality}.${format.ext}`;
+
+      // Try direct fetch first (works for same-origin / CORS-enabled)
+      try {
+        const res = await fetch(format.url, { mode: 'cors' });
+        if (!res.ok) throw new Error('fetch failed');
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      } catch {
+        // Fallback: proxy through edge function to bypass CORS
+        const proxyUrl = `https://fbaswjlpmqaaxrivgmis.supabase.co/functions/v1/proxy-download?url=${encodeURIComponent(format.url)}&filename=${encodeURIComponent(filename)}`;
+        const a = document.createElement('a');
+        a.href = proxyUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    } catch (err) {
+      // Last resort: open in new tab
+      window.open(format.url, '_blank');
+    } finally {
+      setDownloadingIdx(null);
+    }
+  };
+
   const reset = () => {
     setUrl('');
     setState('idle');
@@ -232,14 +277,16 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
               <a
                 key={i}
                 href={f.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                className="neon-btn px-4 py-2 text-sm flex items-center gap-2"
+                onClick={(e) => handleForceDownload(e, f, i)}
+                className="neon-btn px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50"
               >
-                <Download className="w-3 h-3" />
-                {f.quality} ({f.ext})
-                {f.size && <span className="text-[10px] opacity-70">{f.size}</span>}
+                {downloadingIdx === i ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Download className="w-3 h-3" />
+                )}
+                {downloadingIdx === i ? 'Downloading…' : `${f.quality} (${f.ext})`}
+                {f.size && downloadingIdx !== i && <span className="text-[10px] opacity-70">{f.size}</span>}
               </a>
             ))}
           </div>
