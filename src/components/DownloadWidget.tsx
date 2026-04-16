@@ -4,6 +4,7 @@ import { Download, Clipboard, Copy, RefreshCw, AlertCircle, CheckCircle, Music }
 import { detectPlatformFromUrl, VIDEO_PLATFORMS, AUDIO_PLATFORMS, type Platform } from '@/data/platforms';
 import { supabase } from '@/integrations/supabase/client';
 import DownloadSuccessToast from './DownloadSuccessToast';
+import confetti from 'canvas-confetti';
 
 interface MediaFormat {
   quality: string;
@@ -157,8 +158,37 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       window.open(format.url, '_blank');
     } finally {
       setDownloadingIdx(null);
-      // Show celebratory toast
+      // Show celebratory toast + confetti burst
       setShowSuccessToast(true);
+      // Neon-themed confetti from both edges
+      const colors = ['#00ffff', '#ff00ff', '#ffe600', '#00ff9d'];
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { x: 0.2, y: 0.8 },
+        colors,
+        startVelocity: 45,
+        scalar: 0.9,
+      });
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { x: 0.8, y: 0.8 },
+        colors,
+        startVelocity: 45,
+        scalar: 0.9,
+      });
+      // Second softer wave
+      window.setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          spread: 100,
+          origin: { y: 0.6 },
+          colors,
+          gravity: 0.7,
+          scalar: 0.7,
+        });
+      }, 250);
       window.setTimeout(() => setShowSuccessToast(false), 8000);
     }
   };
