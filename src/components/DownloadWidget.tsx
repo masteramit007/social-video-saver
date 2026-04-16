@@ -114,8 +114,6 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
-
   const handleForceDownload = async (e: React.MouseEvent, format: MediaFormat, idx: number) => {
     e.preventDefault();
     if (!result) return;
