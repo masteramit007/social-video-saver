@@ -52,12 +52,8 @@ const PLATFORMS: Record<string, RegExp> = {
   bigo: /bigo\.tv|bigolive\.com/,
   kuaishou: /kuaishou\.com|gifshow\.com/,
   xiaohongshu: /xiaohongshu\.com|xhslink\.com/,
-  hipi: /hipi\.co\.in/,
-  chingari: /chingari\.io/,
   afreecatv: /afreecatv\.com|sooplive\.com/,
-  vidio: /vidio\.com/,
   izlesene: /izlesene\.com/,
-  puhutv: /puhutv\.com/,
 };
 
 function detectPlatform(url: string): string {
