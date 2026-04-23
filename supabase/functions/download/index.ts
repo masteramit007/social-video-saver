@@ -760,7 +760,7 @@ async function tryNativeFallback(url: string, platform: string) {
             timeout: 8000,
             headers: { 'User-Agent': ua, 'Accept': 'application/json' },
           });
-          const candidate = tryParse(res.body || '');
+          const candidate = tryParse(res.data || '');
           if (candidate) { post = candidate; break outer; }
           lastErr = 'non-JSON or empty';
         } catch (e) {
