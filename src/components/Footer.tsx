@@ -1,49 +1,50 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getPopularAudioPlatforms } from '@/data/platforms';
+import { VIDEO_PLATFORMS, AUDIO_PLATFORMS } from '@/data/platforms';
 import { supportedLanguages } from '@/i18n';
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
-  const topVideo = getPopularVideoPlatforms().slice(0, 10);
-  const topAudio = getPopularAudioPlatforms().slice(0, 10);
+  const allVideo = VIDEO_PLATFORMS;
+  const allAudio = AUDIO_PLATFORMS;
 
   return (
     <footer className="relative z-10 mt-20 border-t border-foreground/5">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+        {/* Full platform grid — every supported platform, fully indexable */}
+        <div className="mb-10">
+          <h3 className="font-orbitron text-sm font-bold mb-4 text-foreground/80">📹 All {allVideo.length} Video Platforms We Support</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-1.5">
+            {allVideo.map(p => (
+              <Link key={p.id} to={`/download/${p.slug}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                {p.name}
+              </Link>
+            ))}
+          </div>
+
+          {allAudio.length > 0 && (
+            <>
+              <h3 className="font-orbitron text-sm font-bold mb-4 mt-8 text-foreground/80">🎵 Audio Platforms ({allAudio.length})</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-1.5">
+                {allAudio.map(p => (
+                  <Link key={p.id} to={`/audio/${p.slug}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                    {p.name}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-8 border-t border-foreground/5">
           {/* About */}
           <div>
             <span className="font-orbitron font-bold text-lg bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">SMVD</span>
             <p className="text-sm text-muted-foreground mt-2">{t('footer_tagline')}</p>
             <p className="text-xs text-muted-foreground mt-4">Download videos & audio from {VIDEO_PLATFORMS.length}+ platforms for free.</p>
-          </div>
-
-          {/* Video Downloaders */}
-          <div>
-            <h4 className="font-orbitron text-sm font-bold mb-3 text-foreground/80">📹 Video Downloaders</h4>
-            <div className="flex flex-col gap-1">
-              {topVideo.map(p => (
-                <Link key={p.id} to={`/download/${p.slug}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {p.name}
-                </Link>
-              ))}
-              <Link to="/video-downloader" className="text-xs text-neon-cyan mt-1">View all {VIDEO_PLATFORMS.length}+ video platforms →</Link>
-            </div>
-          </div>
-
-          {/* Audio Downloaders */}
-          <div>
-            <h4 className="font-orbitron text-sm font-bold mb-3 text-foreground/80">🎵 Audio Downloaders</h4>
-            <div className="flex flex-col gap-1">
-              {topAudio.map(p => (
-                <Link key={p.id} to={`/audio/${p.slug}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {p.name}
-                </Link>
-              ))}
-              <Link to="/audio-downloader" className="text-xs text-neon-cyan mt-1">View all {AUDIO_PLATFORMS.length} audio platforms →</Link>
-            </div>
           </div>
 
           {/* By Region */}
