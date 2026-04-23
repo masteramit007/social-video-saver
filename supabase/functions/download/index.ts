@@ -1092,6 +1092,8 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    // Reddit-specific: rapidsave bypasses Reddit's bot wall (most reliable for v.redd.it).
+    ...(platform === 'reddit' ? [{ name: 'rapidsave', fn: () => tryRapidSaveReddit(url) }] : []),
     // For TikTok, TikWM is the most reliable extractor — try it first.
     ...(platform === 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
