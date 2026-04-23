@@ -370,7 +370,10 @@ async function tryCobaltAPI(url: string) {
   throw new Error(`Cobalt API: ${lastError}`);
 }
 
-// TikTok-specific FREE failsafe via TikWM (no auth, watermark-free)
+// FREE failsafe via TikWM (no auth, watermark-free).
+// Despite the name, TikWM's /api/ endpoint accepts URLs from many platforms
+// (TikTok, Douyin, Instagram, Facebook, YouTube Shorts, Twitter/X, etc.) and returns
+// a normalized payload. Used as a universal free fallback.
 async function tryTikwm(url: string) {
   const res = await fetchJson('https://www.tikwm.com/api/', {
     method: 'POST',
@@ -387,17 +390,36 @@ async function tryTikwm(url: string) {
   }
   const abs = (u: string) => u.startsWith('http') ? u : `https://www.tikwm.com${u.startsWith('/') ? u : '/' + u}`;
   const formats: MediaFormat[] = [];
+
   if (d.hdplay) formats.push({ quality: 'HD (no watermark)', url: abs(d.hdplay), ext: 'mp4', type: 'video', size: null });
   if (d.play) formats.push({ quality: 'SD (no watermark)', url: abs(d.play), ext: 'mp4', type: 'video', size: null });
   if (d.wmplay) formats.push({ quality: 'With watermark', url: abs(d.wmplay), ext: 'mp4', type: 'video', size: null });
   if (d.music) formats.push({ quality: 'Audio (MP3)', url: abs(d.music), ext: 'mp3', type: 'audio', size: null });
+
+  // Image carousels (Instagram / TikTok slideshows)
+  if (Array.isArray(d.images)) {
+    d.images.forEach((img: string, i: number) => {
+      if (img) formats.push({
+        quality: `Image ${i + 1}`,
+        url: abs(img),
+        ext: inferExtension(img, 'jpg'),
+        type: 'image',
+        size: null,
+      });
+    });
+  }
+
   if (!formats.length) throw new Error('tikwm: no media in response');
+
+  const isAudioOnly = formats.every(f => f.type === 'audio');
+  const isImageOnly = formats.every(f => f.type === 'image');
+
   return {
-    title: d.title || 'TikTok Video',
-    thumbnail: d.cover || d.origin_cover || null,
+    title: d.title || 'Downloaded Media',
+    thumbnail: d.cover || d.origin_cover || d.ai_dynamic_cover || null,
     duration: d.duration ? `${d.duration}s` : null,
-    platform: 'tiktok',
-    type: 'video',
+    platform: 'unknown',
+    type: isImageOnly ? 'image' : isAudioOnly ? 'audio' : 'video',
     formats,
     source: 'tikwm',
   };
@@ -921,10 +943,14 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    // For TikTok, TikWM is the most reliable extractor — try it first.
     ...(platform === 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
+    // For non-TikTok platforms, use TikWM as a free fallback after paid RapidAPI layers
+    // but before Cobalt/native (it supports IG, FB, YouTube Shorts, X, Douyin, etc.).
+    ...(platform !== 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'cobalt', fn: () => tryCobaltAPI(url) },
     { name: 'yt-dlp-bridge', fn: () => tryYtDlpBridge(url) },
     { name: 'vidbee-bridge', fn: () => tryVidBeeBridge(url) },
