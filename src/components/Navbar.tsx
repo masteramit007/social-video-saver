@@ -55,9 +55,9 @@ const Navbar: React.FC = () => {
               📹 Video <ChevronDown className="w-3 h-3" />
             </button>
             {videoOpen && (
-              <div className="absolute top-full left-0 mt-1 glass p-5 min-w-[520px] grid grid-cols-3 gap-4 rounded-xl border border-foreground/10">
+              <div className="absolute top-full left-0 mt-1 glass p-5 w-[680px] grid grid-cols-3 gap-4 rounded-xl border border-foreground/10 max-h-[70vh] overflow-y-auto">
                 <div>
-                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Popular</h4>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">Popular ({popularVideo.length})</h4>
                   {popularVideo.map(p => (
                     <Link key={p.id} to={`/download/${p.slug}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5 transition-colors">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
@@ -74,14 +74,22 @@ const Navbar: React.FC = () => {
                     </Link>
                   ))}
                   <Link to="/watermark-free-downloader" className="text-xs text-neon-cyan mt-2 block px-2">All Watermark-Free →</Link>
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">By Region</h4>
+
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 mt-4 font-orbitron">By Region</h4>
                   <Link to="/download/china" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇨🇳 China ({chinaP.length})</Link>
                   <Link to="/download/india" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇮🇳 India ({indiaP.length})</Link>
                   <Link to="/download/russia" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇷🇺 Russia ({russiaP.length})</Link>
                   <Link to="/download/korea" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇰🇷 Korea ({koreaP.length})</Link>
-                  <Link to="/video-downloader" className="text-xs text-neon-cyan mt-2 block px-2">All Platforms →</Link>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">All Platforms ({allVideo.length})</h4>
+                  {allVideo.map(p => (
+                    <Link key={p.id} to={`/download/${p.slug}`} className="flex items-center gap-2 text-xs text-foreground/60 hover:text-foreground px-2 py-1 rounded-lg hover:bg-foreground/5 transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.color }} />
+                      {p.name}
+                    </Link>
+                  ))}
+                  <Link to="/video-downloader" className="text-xs text-neon-cyan mt-2 block px-2">View All Page →</Link>
                 </div>
               </div>
             )}
