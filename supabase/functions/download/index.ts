@@ -461,7 +461,7 @@ async function tryRapidSaveReddit(url: string) {
       'Accept-Language': 'en-US,en;q=0.9',
     },
   });
-  const html = res.body || '';
+  const html = res.data || '';
   if (!html || html.length < 500) throw new Error('rapidsave: empty response');
 
   const formats: MediaFormat[] = [];
