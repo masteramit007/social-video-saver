@@ -658,21 +658,68 @@ async function tryNativeFallback(url: string, platform: string) {
       const resolved = await fetchText(cleanUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
       cleanUrl = (resolved.url || cleanUrl).split('?')[0].replace(/\/+$/, '');
     }
-    const jsonUrl = cleanUrl + '.json';
-    const res = await fetchJson(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 8000 });
-    const listing = Array.isArray(res.data) ? res.data : [res.data];
-    const post = listing[0]?.data?.children?.[0]?.data;
-    if (!post) throw new Error('Reddit: could not parse post data');
+    // Reddit blocks generic browser UAs server-side. Use bot-friendly UAs
+    // and try multiple hosts (old.reddit.com first, then www, then api).
+    const pathOnly = cleanUrl.replace(/^https?:\/\/(?:www\.|old\.|new\.|i\.|m\.)?reddit\.com/, '');
+    const candidates = [
+      `https://old.reddit.com${pathOnly}.json?raw_json=1`,
+      `https://www.reddit.com${pathOnly}.json?raw_json=1`,
+      `https://api.reddit.com${pathOnly}.json?raw_json=1`,
+    ];
+    const uaPool = [
+      'curl/8.4.0',
+      'SMVDDownloader/1.0 (by /u/smvd_bot)',
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    ];
+    let post: any = null;
+    let lastErr = '';
+    outer: for (const jsonUrl of candidates) {
+      for (const ua of uaPool) {
+        try {
+          const res = await fetchJson(jsonUrl, {
+            timeout: 8000,
+            headers: {
+              'User-Agent': ua,
+              'Accept': 'application/json',
+              'Accept-Language': 'en-US,en;q=0.9',
+            },
+          });
+          const listing = Array.isArray(res.data) ? res.data : [res.data];
+          const candidate = listing[0]?.data?.children?.[0]?.data;
+          if (candidate) { post = candidate; break outer; }
+          lastErr = 'empty listing';
+        } catch (e) {
+          lastErr = e instanceof Error ? e.message : String(e);
+          // Try next UA / host
+        }
+      }
+    }
+    if (!post) throw new Error(`Reddit: could not parse post data (${lastErr})`);
     const videoUrl = getRedditVideoUrl(post);
     const gifUrl = post?.preview?.images?.[0]?.variants?.mp4?.source?.url?.replace(/&amp;/g, '&');
-    const mediaUrl = videoUrl || gifUrl;
+    // Image post fallback
+    const imageUrl = (!videoUrl && !gifUrl)
+      ? (post?.url_overridden_by_dest && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(post.url_overridden_by_dest) ? post.url_overridden_by_dest : null)
+      : null;
+    const mediaUrl = videoUrl || gifUrl || imageUrl;
     if (!mediaUrl) throw new Error('Reddit: no video found in post');
-    const formats: MediaFormat[] = [{ quality: 'HD', url: mediaUrl, ext: 'mp4' }];
+    const isImage = !!imageUrl && !videoUrl && !gifUrl;
+    const formats: MediaFormat[] = [{
+      quality: isImage ? 'Original' : 'HD',
+      url: mediaUrl,
+      ext: inferExtension(mediaUrl, isImage ? 'jpg' : 'mp4'),
+    }];
     if (videoUrl) {
       const audioUrl = videoUrl.replace(/DASH_\d+\.mp4/, 'DASH_audio.mp4').replace(/DASH_\d+/, 'DASH_audio');
       formats.push({ quality: 'audio', url: audioUrl, ext: 'mp4', type: 'audio' });
     }
-    return { title: post?.title || 'Reddit Video', thumbnail: (post?.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default') ? post.thumbnail : null, formats, source: 'native-reddit' };
+    return {
+      title: post?.title || 'Reddit Video',
+      thumbnail: (post?.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default') ? post.thumbnail : null,
+      formats,
+      source: 'native-reddit',
+      type: isImage ? 'image' : 'video',
+    };
   }
 
   if (platform === 'twitter') return tryXFallback(url);
