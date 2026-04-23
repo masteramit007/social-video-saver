@@ -128,6 +128,13 @@ export const PLATFORM_PATTERNS: Record<string, RegExp> = {
   bigo: /bigo\.tv/,
   kuaishou: /kuaishou\.com|gifshow\.com/,
   xiaohongshu: /xiaohongshu\.com|xhslink\.com/,
+  hipi: /hipi\.co\.in/,
+  chingari: /chingari\.io/,
+  afreecatv: /afreecatv\.com|sooplive\.com/,
+  chzzk: /chzzk\.naver\.com/,
+  vidio: /vidio\.com/,
+  izlesene: /izlesene\.com/,
+  puhutv: /puhutv\.com/,
 };
 
 export function detectPlatformFromUrl(url: string): Platform | null {
