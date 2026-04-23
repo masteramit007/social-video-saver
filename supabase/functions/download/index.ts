@@ -370,6 +370,38 @@ async function tryCobaltAPI(url: string) {
   throw new Error(`Cobalt API: ${lastError}`);
 }
 
+// TikTok-specific FREE failsafe via TikWM (no auth, watermark-free)
+async function tryTikwm(url: string) {
+  const res = await fetchJson('https://www.tikwm.com/api/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    },
+    body: `url=${encodeURIComponent(url)}&hd=1`,
+    timeout: 10000,
+  });
+  const d = res.data?.data;
+  if (!d || res.data?.code !== 0) {
+    throw new Error(res.data?.msg || `tikwm code ${res.data?.code}`);
+  }
+  const abs = (u: string) => u.startsWith('http') ? u : `https://www.tikwm.com${u.startsWith('/') ? u : '/' + u}`;
+  const formats: MediaFormat[] = [];
+  if (d.hdplay) formats.push({ quality: 'HD (no watermark)', url: abs(d.hdplay), ext: 'mp4', type: 'video', size: null });
+  if (d.play) formats.push({ quality: 'SD (no watermark)', url: abs(d.play), ext: 'mp4', type: 'video', size: null });
+  if (d.wmplay) formats.push({ quality: 'With watermark', url: abs(d.wmplay), ext: 'mp4', type: 'video', size: null });
+  if (d.music) formats.push({ quality: 'Audio (MP3)', url: abs(d.music), ext: 'mp3', type: 'audio', size: null });
+  if (!formats.length) throw new Error('tikwm: no media in response');
+  return {
+    title: d.title || 'TikTok Video',
+    thumbnail: d.cover || d.origin_cover || null,
+    duration: d.duration ? `${d.duration}s` : null,
+    platform: 'tiktok',
+    type: 'video',
+    formats,
+    source: 'tikwm',
+  };
+}
 
 // deno-lint-ignore no-explicit-any
 function getRedditVideoUrl(post: any): string | null {
