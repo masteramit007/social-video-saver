@@ -444,6 +444,74 @@ function getRedditVideoUrl(post: any): string | null {
   return candidates.find((item: unknown) => typeof item === 'string' && (item as string).length > 0) as string || null;
 }
 
+// Reddit-specific extractor using rapidsave.com (public, free, no API key).
+// Bypasses Reddit's server-side bot wall by scraping rapidsave's pre-rendered page.
+async function tryRapidSaveReddit(url: string) {
+  let cleanUrl = url.split('?')[0].replace(/\/+$/, '');
+  if (/redd\.it/.test(cleanUrl)) {
+    const resolved = await fetchText(cleanUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    cleanUrl = (resolved.url || cleanUrl).split('?')[0].replace(/\/+$/, '');
+  }
+  const apiUrl = `https://rapidsave.com/info?url=${encodeURIComponent(cleanUrl)}`;
+  const res = await fetchText(apiUrl, {
+    timeout: 12000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+  });
+  const html = res.data || '';
+  if (!html || html.length < 500) throw new Error('rapidsave: empty response');
+
+  const formats: MediaFormat[] = [];
+
+  // 1) Merged HD video+audio (best quality) via rapidsave proxy
+  const mergedMatch = html.match(/href="(https:\/\/sd\.rapidsave\.com\/download\.php\?[^"]+)"/);
+  if (mergedMatch?.[1]) {
+    formats.push({ quality: 'HD (with audio)', url: mergedMatch[1].replace(/&amp;/g, '&'), ext: 'mp4' });
+  }
+
+  // 2) Direct video_url from the merged link query (raw v.redd.it CMAF)
+  const videoMatch = html.match(/video_url=([^&"]+)/);
+  if (videoMatch?.[1]) {
+    const vurl = decodeURIComponent(videoMatch[1]);
+    if (!formats.find(f => f.url === vurl)) {
+      formats.push({ quality: 'Video only', url: vurl, ext: 'mp4' });
+    }
+  }
+
+  // 3) Audio track
+  const audioQ = html.match(/audio_url=([^&"]+)/);
+  if (audioQ?.[1]) {
+    formats.push({ quality: 'Audio', url: decodeURIComponent(audioQ[1]), ext: 'mp4', type: 'audio' });
+  }
+
+  // 4) Image fallback (i.redd.it / gallery)
+  if (!formats.length) {
+    const imgMatch = html.match(/href="(https:\/\/i\.redd\.it\/[^"]+)"/);
+    if (imgMatch?.[1]) {
+      formats.push({ quality: 'Original', url: imgMatch[1], ext: inferExtension(imgMatch[1], 'jpg') });
+    }
+  }
+
+  if (!formats.length) throw new Error('rapidsave: no media found');
+
+  const titleMatch = html.match(/<h2 class="text-center text-truncate"[^>]*>\s*([^<]+?)\s*<\/h2>/i)
+    || html.match(/<meta property="og:title" content="([^"]+)"/i)
+    || html.match(/<title>([^<]+)<\/title>/i);
+  const thumbMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
+  const title = titleMatch?.[1]?.replace(/ - RedditSave$| \| RapidSave.*$/i, '').trim() || 'Reddit Video';
+
+  return {
+    title,
+    thumbnail: thumbMatch?.[1] || null,
+    formats,
+    source: 'rapidsave',
+    type: /\.(jpg|jpeg|png|gif|webp)/i.test(formats[0].url) ? 'image' : 'video',
+  };
+}
+
 function getXStatusId(url: string): string | null {
   return url.match(/(?:twitter\.com|x\.com)\/[A-Za-z0-9_]+\/status\/(\d+)/)?.[1] || null;
 }
@@ -658,21 +726,96 @@ async function tryNativeFallback(url: string, platform: string) {
       const resolved = await fetchText(cleanUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
       cleanUrl = (resolved.url || cleanUrl).split('?')[0].replace(/\/+$/, '');
     }
-    const jsonUrl = cleanUrl + '.json';
-    const res = await fetchJson(jsonUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 8000 });
-    const listing = Array.isArray(res.data) ? res.data : [res.data];
-    const post = listing[0]?.data?.children?.[0]?.data;
-    if (!post) throw new Error('Reddit: could not parse post data');
+    // Reddit blocks generic browser UAs server-side. Use bot-friendly UAs
+    // and try multiple hosts (old.reddit.com first, then www, then api).
+    const pathOnly = cleanUrl.replace(/^https?:\/\/(?:www\.|old\.|new\.|i\.|m\.)?reddit\.com/, '');
+    const directCandidates = [
+      `https://old.reddit.com${pathOnly}.json?raw_json=1`,
+      `https://www.reddit.com${pathOnly}.json?raw_json=1`,
+      `https://api.reddit.com${pathOnly}.json?raw_json=1`,
+    ];
+    // Public reader-proxy fallbacks (bypass Reddit's anti-bot wall from cloud IPs)
+    const proxyCandidates = [
+      `https://r.jina.ai/https://old.reddit.com${pathOnly}.json?raw_json=1`,
+      `https://r.jina.ai/https://www.reddit.com${pathOnly}.json?raw_json=1`,
+    ];
+    const uaPool = [
+      'curl/8.4.0',
+      'SMVDDownloader/1.0 (by /u/smvd_bot)',
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    ];
+    let post: any = null;
+    let lastErr = '';
+    const tryParse = (raw: string) => {
+      try {
+        const data = JSON.parse(raw);
+        const listing = Array.isArray(data) ? data : [data];
+        return listing[0]?.data?.children?.[0]?.data ?? null;
+      } catch { return null; }
+    };
+    // 1) Direct hosts
+    outer: for (const jsonUrl of directCandidates) {
+      for (const ua of uaPool) {
+        try {
+          const res = await fetchText(jsonUrl, {
+            timeout: 8000,
+            headers: { 'User-Agent': ua, 'Accept': 'application/json' },
+          });
+          const candidate = tryParse(res.data || '');
+          if (candidate) { post = candidate; break outer; }
+          lastErr = 'non-JSON or empty';
+        } catch (e) {
+          lastErr = e instanceof Error ? e.message : String(e);
+        }
+      }
+    }
+    // 2) Reader proxies
+    if (!post) {
+      for (const jsonUrl of proxyCandidates) {
+        try {
+          const res = await fetchText(jsonUrl, {
+            timeout: 10000,
+            headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json', 'x-respond-with': 'json' },
+          });
+          // r.jina.ai may wrap content; locate first '{' or '['
+          const body = res.data || '';
+          const jsonStart = Math.min(
+            ...['{', '['].map(c => { const i = body.indexOf(c); return i === -1 ? Infinity : i; })
+          );
+          if (jsonStart === Infinity) { lastErr = 'proxy returned no JSON'; continue; }
+          const candidate = tryParse(body.slice(jsonStart));
+          if (candidate) { post = candidate; break; }
+          lastErr = 'proxy parse failed';
+        } catch (e) {
+          lastErr = e instanceof Error ? e.message : String(e);
+        }
+      }
+    }
+    if (!post) throw new Error(`Reddit: could not parse post data (${lastErr})`);
     const videoUrl = getRedditVideoUrl(post);
     const gifUrl = post?.preview?.images?.[0]?.variants?.mp4?.source?.url?.replace(/&amp;/g, '&');
-    const mediaUrl = videoUrl || gifUrl;
+    const imageUrl = (!videoUrl && !gifUrl)
+      ? (post?.url_overridden_by_dest && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(post.url_overridden_by_dest) ? post.url_overridden_by_dest : null)
+      : null;
+    const mediaUrl = videoUrl || gifUrl || imageUrl;
     if (!mediaUrl) throw new Error('Reddit: no video found in post');
-    const formats: MediaFormat[] = [{ quality: 'HD', url: mediaUrl, ext: 'mp4' }];
+    const isImage = !!imageUrl && !videoUrl && !gifUrl;
+    const formats: MediaFormat[] = [{
+      quality: isImage ? 'Original' : 'HD',
+      url: mediaUrl,
+      ext: inferExtension(mediaUrl, isImage ? 'jpg' : 'mp4'),
+    }];
     if (videoUrl) {
       const audioUrl = videoUrl.replace(/DASH_\d+\.mp4/, 'DASH_audio.mp4').replace(/DASH_\d+/, 'DASH_audio');
       formats.push({ quality: 'audio', url: audioUrl, ext: 'mp4', type: 'audio' });
     }
-    return { title: post?.title || 'Reddit Video', thumbnail: (post?.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default') ? post.thumbnail : null, formats, source: 'native-reddit' };
+    return {
+      title: post?.title || 'Reddit Video',
+      thumbnail: (post?.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default') ? post.thumbnail : null,
+      formats,
+      source: 'native-reddit',
+      type: isImage ? 'image' : 'video',
+    };
   }
 
   if (platform === 'twitter') return tryXFallback(url);
@@ -950,6 +1093,8 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    // Reddit-specific: rapidsave bypasses Reddit's bot wall (most reliable for v.redd.it).
+    ...(platform === 'reddit' ? [{ name: 'rapidsave', fn: () => tryRapidSaveReddit(url) }] : []),
     // For TikTok, TikWM is the most reliable extractor — try it first.
     ...(platform === 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
