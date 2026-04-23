@@ -44,6 +44,7 @@ const PLATFORMS: Record<string, RegExp> = {
   moj: /mojapp\.in|moj\.com/,
   threads: /threads\.net/,
   linkedin: /linkedin\.com/,
+  chzzk: /chzzk\.naver\.com/,
   naver: /naver\.com|tv\.naver\.com/,
   niconico: /nicovideo\.jp|nico\.ms/,
   clapper: /clapper\.com/,
@@ -54,7 +55,6 @@ const PLATFORMS: Record<string, RegExp> = {
   hipi: /hipi\.co\.in/,
   chingari: /chingari\.io/,
   afreecatv: /afreecatv\.com|sooplive\.com/,
-  chzzk: /chzzk\.naver\.com/,
   vidio: /vidio\.com/,
   izlesene: /izlesene\.com/,
   puhutv: /puhutv\.com/,
@@ -1117,6 +1117,30 @@ Deno.serve(async (req) => {
   }
 
   const platform = detectPlatform(url);
+
+  // Platforms that cannot be reliably extracted from a serverless cloud IP.
+  // Reasons: app-only signed APIs, login walls, KR/TR geo-locked CDNs, or Widevine DRM.
+  // We return a friendly 200 with `unsupported: true` instead of churning through every
+  // extractor tier and returning a generic 500/422.
+  const LIMITED_SUPPORT: Record<string, string> = {
+    hipi: 'Hipi is an app-only platform — its API requires a signed device token from the official mobile app, so public web extraction is not possible.',
+    chingari: 'Chingari is an app-only platform — its GraphQL API requires an in-app signed JWT, so links cannot be extracted from a web service.',
+    afreecatv: 'AfreecaTV / SOOP content is region-locked to Korean IP addresses and most VODs require a Korean account login.',
+    chzzk: 'CHZZK (Naver) requires Naver login cookies and serves HMAC-signed streams that are region-locked to Korea.',
+    vidio: 'Vidio premium content is protected by Widevine DRM and cannot be downloaded by any tool. Free clips often require an Indonesian account.',
+    izlesene: 'Izlesene is protected by Cloudflare bot detection and is geo-restricted to Turkish IP addresses, so cloud servers are blocked.',
+    puhutv: 'PuhuTV episodes are protected by Widevine DRM and cannot be downloaded. Clips and trailers are geo-locked to Turkey.',
+  };
+  if (LIMITED_SUPPORT[platform]) {
+    return new Response(JSON.stringify({
+      unsupported: true,
+      platform,
+      title: `${platform.charAt(0).toUpperCase() + platform.slice(1)}: Limited Support`,
+      reason: LIMITED_SUPPORT[platform],
+      formats: [],
+    }), { status: 200, headers: corsHeaders });
+  }
+
   const layers = [
     // Reddit-specific: rapidsave bypasses Reddit's bot wall (most reliable for v.redd.it).
     ...(platform === 'reddit' ? [{ name: 'rapidsave', fn: () => tryRapidSaveReddit(url) }] : []),
