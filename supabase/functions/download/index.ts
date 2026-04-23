@@ -777,7 +777,7 @@ async function tryNativeFallback(url: string, platform: string) {
             headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json', 'x-respond-with': 'json' },
           });
           // r.jina.ai may wrap content; locate first '{' or '['
-          const body = res.body || '';
+          const body = res.data || '';
           const jsonStart = Math.min(
             ...['{', '['].map(c => { const i = body.indexOf(c); return i === -1 ? Infinity : i; })
           );
