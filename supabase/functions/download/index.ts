@@ -661,10 +661,15 @@ async function tryNativeFallback(url: string, platform: string) {
     // Reddit blocks generic browser UAs server-side. Use bot-friendly UAs
     // and try multiple hosts (old.reddit.com first, then www, then api).
     const pathOnly = cleanUrl.replace(/^https?:\/\/(?:www\.|old\.|new\.|i\.|m\.)?reddit\.com/, '');
-    const candidates = [
+    const directCandidates = [
       `https://old.reddit.com${pathOnly}.json?raw_json=1`,
       `https://www.reddit.com${pathOnly}.json?raw_json=1`,
       `https://api.reddit.com${pathOnly}.json?raw_json=1`,
+    ];
+    // Public reader-proxy fallbacks (bypass Reddit's anti-bot wall from cloud IPs)
+    const proxyCandidates = [
+      `https://r.jina.ai/https://old.reddit.com${pathOnly}.json?raw_json=1`,
+      `https://r.jina.ai/https://www.reddit.com${pathOnly}.json?raw_json=1`,
     ];
     const uaPool = [
       'curl/8.4.0',
@@ -673,31 +678,54 @@ async function tryNativeFallback(url: string, platform: string) {
     ];
     let post: any = null;
     let lastErr = '';
-    outer: for (const jsonUrl of candidates) {
+    const tryParse = (raw: string) => {
+      try {
+        const data = JSON.parse(raw);
+        const listing = Array.isArray(data) ? data : [data];
+        return listing[0]?.data?.children?.[0]?.data ?? null;
+      } catch { return null; }
+    };
+    // 1) Direct hosts
+    outer: for (const jsonUrl of directCandidates) {
       for (const ua of uaPool) {
         try {
-          const res = await fetchJson(jsonUrl, {
+          const res = await fetchText(jsonUrl, {
             timeout: 8000,
-            headers: {
-              'User-Agent': ua,
-              'Accept': 'application/json',
-              'Accept-Language': 'en-US,en;q=0.9',
-            },
+            headers: { 'User-Agent': ua, 'Accept': 'application/json' },
           });
-          const listing = Array.isArray(res.data) ? res.data : [res.data];
-          const candidate = listing[0]?.data?.children?.[0]?.data;
+          const candidate = tryParse(res.body || '');
           if (candidate) { post = candidate; break outer; }
-          lastErr = 'empty listing';
+          lastErr = 'non-JSON or empty';
         } catch (e) {
           lastErr = e instanceof Error ? e.message : String(e);
-          // Try next UA / host
+        }
+      }
+    }
+    // 2) Reader proxies
+    if (!post) {
+      for (const jsonUrl of proxyCandidates) {
+        try {
+          const res = await fetchText(jsonUrl, {
+            timeout: 10000,
+            headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json', 'x-respond-with': 'json' },
+          });
+          // r.jina.ai may wrap content; locate first '{' or '['
+          const body = res.body || '';
+          const jsonStart = Math.min(
+            ...['{', '['].map(c => { const i = body.indexOf(c); return i === -1 ? Infinity : i; })
+          );
+          if (jsonStart === Infinity) { lastErr = 'proxy returned no JSON'; continue; }
+          const candidate = tryParse(body.slice(jsonStart));
+          if (candidate) { post = candidate; break; }
+          lastErr = 'proxy parse failed';
+        } catch (e) {
+          lastErr = e instanceof Error ? e.message : String(e);
         }
       }
     }
     if (!post) throw new Error(`Reddit: could not parse post data (${lastErr})`);
     const videoUrl = getRedditVideoUrl(post);
     const gifUrl = post?.preview?.images?.[0]?.variants?.mp4?.source?.url?.replace(/&amp;/g, '&');
-    // Image post fallback
     const imageUrl = (!videoUrl && !gifUrl)
       ? (post?.url_overridden_by_dest && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(post.url_overridden_by_dest) ? post.url_overridden_by_dest : null)
       : null;
