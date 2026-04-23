@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, Globe, ChevronDown } from 'lucide-react';
+import { Menu, X, Globe, ChevronDown, Search } from 'lucide-react';
 import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getWatermarkFreePlatforms, getVideoPlatformsByRegion } from '@/data/platforms';
 import { REGIONS } from '@/data/regions';
 import { supportedLanguages } from '@/i18n';
@@ -12,11 +12,16 @@ const regionalAudioIds = ['jiosaavn','gaana','zingmp3','nhaccuatui'];
 
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [audioOpen, setAudioOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchFocusIdx, setSearchFocusIdx] = useState(0);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -38,6 +43,44 @@ const Navbar: React.FC = () => {
   const musicPlatforms = AUDIO_PLATFORMS.filter(p => musicIds.includes(p.id));
   const podcastPlatforms = AUDIO_PLATFORMS.filter(p => podcastIds.includes(p.id));
   const regionalAudio = AUDIO_PLATFORMS.filter(p => regionalAudioIds.includes(p.id));
+
+  // Searchable index: video + audio platforms + regions
+  const searchIndex = useMemo(() => {
+    const items: Array<{ name: string; type: string; href: string; color?: string; flag?: string }> = [];
+    VIDEO_PLATFORMS.forEach(p => items.push({ name: p.name, type: 'Video', href: `/download/${p.slug}`, color: p.color }));
+    AUDIO_PLATFORMS.forEach(p => items.push({ name: p.name, type: 'Audio', href: `/audio/${p.slug}`, color: p.color }));
+    REGIONS.forEach(r => items.push({ name: r.name, type: 'Region', href: `/download/${r.id}`, flag: r.flag }));
+    return items;
+  }, []);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return searchIndex
+      .filter(i => i.name.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [searchQuery, searchIndex]);
+
+  useEffect(() => { setSearchFocusIdx(0); }, [searchQuery]);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSearchFocusIdx(i => Math.min(i + 1, searchResults.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setSearchFocusIdx(i => Math.max(i - 1, 0)); }
+    else if (e.key === 'Enter' && searchResults[searchFocusIdx]) {
+      navigate(searchResults[searchFocusIdx].href);
+      setSearchQuery(''); setSearchOpen(false); setMenuOpen(false);
+    } else if (e.key === 'Escape') { setSearchOpen(false); }
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass border-b border-foreground/5' : 'bg-transparent'}`}>
@@ -139,6 +182,40 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-3">
+          {/* Search bar */}
+          <div ref={searchRef} className="relative">
+            <div className="flex items-center gap-2 glass border border-foreground/10 rounded-full px-3 py-1.5 w-56 focus-within:border-neon-cyan/50 transition-colors">
+              <Search className="w-3.5 h-3.5 text-foreground/50 flex-shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                onFocus={() => setSearchOpen(true)}
+                onKeyDown={handleSearchKey}
+                placeholder="Search platforms..."
+                className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none w-full"
+              />
+            </div>
+            {searchOpen && searchQuery.trim() && (
+              <div className="absolute right-0 top-full mt-2 glass rounded-xl border border-foreground/10 w-72 max-h-80 overflow-y-auto p-2 z-50">
+                {searchResults.length === 0 ? (
+                  <div className="text-sm text-foreground/50 px-3 py-2">No matches</div>
+                ) : searchResults.map((r, idx) => (
+                  <Link
+                    key={r.href}
+                    to={r.href}
+                    onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${idx === searchFocusIdx ? 'bg-foreground/10 text-foreground' : 'text-foreground/70 hover:bg-foreground/5'}`}
+                  >
+                    {r.flag ? <span>{r.flag}</span> : <span className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color }} />}
+                    <span className="flex-1">{r.name}</span>
+                    <span className="text-xs text-foreground/40">{r.type}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-foreground/70 hover:text-foreground">
               <Globe className="w-4 h-4" />
@@ -164,6 +241,37 @@ const Navbar: React.FC = () => {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="lg:hidden fixed inset-0 top-16 glass z-40 p-6 flex flex-col gap-4 overflow-y-auto">
+          {/* Mobile search */}
+          <div className="flex items-center gap-2 glass border border-foreground/10 rounded-full px-3 py-2">
+            <Search className="w-4 h-4 text-foreground/50 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKey}
+              placeholder="Search platforms..."
+              className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none w-full"
+            />
+          </div>
+          {searchQuery.trim() && (
+            <div className="glass rounded-xl border border-foreground/10 p-2 -mt-2">
+              {searchResults.length === 0 ? (
+                <div className="text-sm text-foreground/50 px-3 py-2">No matches</div>
+              ) : searchResults.map(r => (
+                <Link
+                  key={r.href}
+                  to={r.href}
+                  onClick={() => { setSearchQuery(''); setMenuOpen(false); }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground/70 hover:bg-foreground/5"
+                >
+                  {r.flag ? <span>{r.flag}</span> : <span className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color }} />}
+                  <span className="flex-1">{r.name}</span>
+                  <span className="text-xs text-foreground/40">{r.type}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+
           <Link to="/" onClick={() => setMenuOpen(false)} className="text-lg text-foreground/80 hover:text-foreground">{t('nav_home')}</Link>
           
           <div className="text-sm font-orbitron text-neon-cyan font-bold mt-2">📹 Video Platforms ({allVideo.length})</div>
