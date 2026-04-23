@@ -444,6 +444,73 @@ function getRedditVideoUrl(post: any): string | null {
   return candidates.find((item: unknown) => typeof item === 'string' && (item as string).length > 0) as string || null;
 }
 
+// Reddit-specific extractor using rapidsave.com (public, free, no API key).
+// Bypasses Reddit's server-side bot wall by scraping rapidsave's pre-rendered page.
+async function tryRapidSaveReddit(url: string) {
+  let cleanUrl = url.split('?')[0].replace(/\/+$/, '');
+  if (/redd\.it/.test(cleanUrl)) {
+    const resolved = await fetchText(cleanUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    cleanUrl = (resolved.url || cleanUrl).split('?')[0].replace(/\/+$/, '');
+  }
+  const apiUrl = `https://rapidsave.com/info?url=${encodeURIComponent(cleanUrl)}`;
+  const res = await fetchText(apiUrl, {
+    timeout: 12000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+  });
+  const html = res.body || '';
+  if (!html || html.length < 500) throw new Error('rapidsave: empty response');
+
+  const formats: MediaFormat[] = [];
+
+  // 1) Merged HD video+audio (best quality) via rapidsave proxy
+  const mergedMatch = html.match(/href="(https:\/\/sd\.rapidsave\.com\/download\.php\?[^"]+)"/);
+  if (mergedMatch?.[1]) {
+    formats.push({ quality: 'HD (with audio)', url: mergedMatch[1].replace(/&amp;/g, '&'), ext: 'mp4' });
+  }
+
+  // 2) Direct video_url from the merged link query (raw v.redd.it CMAF)
+  const videoMatch = html.match(/video_url=([^&"]+)/);
+  if (videoMatch?.[1]) {
+    const vurl = decodeURIComponent(videoMatch[1]);
+    if (!formats.find(f => f.url === vurl)) {
+      formats.push({ quality: 'Video only', url: vurl, ext: 'mp4' });
+    }
+  }
+
+  // 3) Audio track
+  const audioQ = html.match(/audio_url=([^&"]+)/);
+  if (audioQ?.[1]) {
+    formats.push({ quality: 'Audio', url: decodeURIComponent(audioQ[1]), ext: 'mp4', type: 'audio' });
+  }
+
+  // 4) Image fallback (i.redd.it / gallery)
+  if (!formats.length) {
+    const imgMatch = html.match(/href="(https:\/\/i\.redd\.it\/[^"]+)"/);
+    if (imgMatch?.[1]) {
+      formats.push({ quality: 'Original', url: imgMatch[1], ext: inferExtension(imgMatch[1], 'jpg') });
+    }
+  }
+
+  if (!formats.length) throw new Error('rapidsave: no media found');
+
+  const titleMatch = html.match(/<meta property="og:title" content="([^"]+)"/i)
+    || html.match(/<title>([^<]+)<\/title>/i);
+  const thumbMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
+  const title = titleMatch?.[1]?.replace(/ - RedditSave$| \| RapidSave.*$/i, '').trim() || 'Reddit Video';
+
+  return {
+    title,
+    thumbnail: thumbMatch?.[1] || null,
+    formats,
+    source: 'rapidsave',
+    type: /\.(jpg|jpeg|png|gif|webp)/i.test(formats[0].url) ? 'image' : 'video',
+  };
+}
+
 function getXStatusId(url: string): string | null {
   return url.match(/(?:twitter\.com|x\.com)\/[A-Za-z0-9_]+\/status\/(\d+)/)?.[1] || null;
 }
