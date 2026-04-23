@@ -497,7 +497,8 @@ async function tryRapidSaveReddit(url: string) {
 
   if (!formats.length) throw new Error('rapidsave: no media found');
 
-  const titleMatch = html.match(/<meta property="og:title" content="([^"]+)"/i)
+  const titleMatch = html.match(/<h2 class="text-center text-truncate"[^>]*>\s*([^<]+?)\s*<\/h2>/i)
+    || html.match(/<meta property="og:title" content="([^"]+)"/i)
     || html.match(/<title>([^<]+)<\/title>/i);
   const thumbMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
   const title = titleMatch?.[1]?.replace(/ - RedditSave$| \| RapidSave.*$/i, '').trim() || 'Reddit Video';
