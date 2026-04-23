@@ -12,7 +12,7 @@ const WatermarkFreePage: React.FC = () => {
 
   const faq = [
     { q: 'What does watermark-free mean?', a: 'Watermark-free means the downloaded video will not have any platform logo or username overlay on the video. You get a clean, original-quality video file.' },
-    { q: 'Which platforms support watermark-free downloads?', a: 'Currently TikTok, Douyin, CapCut, Hipi, and Xiaohongshu videos can be downloaded without watermarks.' },
+    { q: 'Which platforms support watermark-free downloads?', a: 'Currently TikTok, Douyin, CapCut, and Xiaohongshu videos can be downloaded without watermarks.' },
     { q: 'How does watermark removal work?', a: 'We don\'t actually "remove" watermarks. Instead, we extract the original video file from the platform\'s CDN before the watermark is applied, giving you the clean source file.' },
     { q: 'Is the quality affected?', a: 'No! Since we extract the original file, you get the exact same quality as uploaded by the creator, without any quality loss.' },
     { q: 'Is watermark removal legal?', a: 'Downloading for personal use is generally permitted. However, always respect creators\' rights and don\'t redistribute content commercially.' },
@@ -30,7 +30,7 @@ const WatermarkFreePage: React.FC = () => {
     <>
       <SEOHead
         title="Watermark-Free Video Downloader — TikTok, Douyin, CapCut"
-        description="Download TikTok, Douyin, CapCut, Hipi and Xiaohongshu videos without watermark. Free, instant, no login required."
+        description="Download TikTok, Douyin, CapCut and Xiaohongshu videos without watermark. Free, instant, no login required."
         canonical={`${SITE}/watermark-free-downloader`}
         jsonLd={jsonLd}
       />
@@ -43,7 +43,7 @@ const WatermarkFreePage: React.FC = () => {
               Watermark-Free Video Downloader
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Download TikTok, Douyin, CapCut, Hipi and Xiaohongshu videos without watermark. Free, instant, no login required.
+              Download TikTok, Douyin, CapCut and Xiaohongshu videos without watermark. Free, instant, no login required.
             </p>
           </div>
 
@@ -87,7 +87,7 @@ const WatermarkFreePage: React.FC = () => {
             <h2 className="font-orbitron text-xl font-bold neon-text text-center mb-6">How It Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { step: '1', title: 'Copy the Link', desc: 'Copy the video URL from TikTok, Douyin, CapCut, Hipi, or Xiaohongshu' },
+                { step: '1', title: 'Copy the Link', desc: 'Copy the video URL from TikTok, Douyin, CapCut, or Xiaohongshu' },
                 { step: '2', title: 'Paste & Download', desc: 'Paste the link into our downloader and click the Download button' },
                 { step: '3', title: 'Save Clean Video', desc: 'Download the watermark-free video in HD quality to your device' },
               ].map(s => (

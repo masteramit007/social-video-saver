@@ -309,17 +309,6 @@ export const PLATFORM_KEYWORDS: Record<string, PlatformKeywords> = {
     h2s: ['How to Download CapCut Videos Without Watermark', 'Download CapCut Templates', 'CapCut Downloader Features', 'Frequently Asked Questions — CapCut Downloader'],
     schemaDescription: 'Free CapCut video downloader to save template videos without watermark in HD quality. No login required.',
   },
-  hipi: {
-    primary: ['hipi video downloader', 'download hipi video'],
-    longTail: ['hipi downloader without watermark', 'save hipi video'],
-    device: [],
-    niche: [],
-    seoTitle: 'Hipi Video Downloader — No Watermark Free Download 2026',
-    seoDescription: 'Download Hipi videos without watermark free. Hipi downloader — save Indian short videos in HD. No login, works on all devices.',
-    h1: 'Hipi Video Downloader',
-    h2s: ['How to Download Hipi Videos Without Watermark', 'Hipi Downloader Features', 'Download Indian Short Videos', 'Frequently Asked Questions — Hipi Downloader'],
-    schemaDescription: 'Free Hipi video downloader to save Indian short videos without watermark in HD quality. No login required.',
-  },
   jiosaavn: {
     primary: ['jiosaavn downloader', 'jiosaavn mp3 downloader'],
     longTail: ['download jiosaavn songs free', 'jiosaavn to mp3', 'jiosaavn songs download', 'jiosaavn downloader online'],
