@@ -11,10 +11,14 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const requestBuckets = new Map<string, { count: number; windowStart: number }>();
 
 const PLATFORMS: Record<string, RegExp> = {
+  instagram: /instagram\.com/,
+  facebook: /facebook\.com|fb\.watch/,
+  twitter: /twitter\.com|x\.com/,
+  snapchat: /snapchat\.com/,
   tiktok: /tiktok\.com|vm\.tiktok\.com/,
   youtube: /youtube\.com|youtu\.be/,
-  reddit: /reddit\.com/,
-  pinterest: /pinterest\.com/,
+  reddit: /reddit\.com|redd\.it/,
+  pinterest: /pinterest\.com|pin\.it/,
   bilibili: /bilibili\.com|b23\.tv/,
   vimeo: /vimeo\.com/,
   dailymotion: /dailymotion\.com/,
@@ -45,6 +49,8 @@ const PLATFORMS: Record<string, RegExp> = {
   clapper: /clapper\.com/,
   rumble: /rumble\.com/,
   bigo: /bigo\.tv|bigolive\.com/,
+  kuaishou: /kuaishou\.com|gifshow\.com/,
+  xiaohongshu: /xiaohongshu\.com|xhslink\.com/,
   hipi: /hipi\.co\.in/,
   chingari: /chingari\.io/,
   afreecatv: /afreecatv\.com|sooplive\.com/,
@@ -870,6 +876,25 @@ async function tryNativeFallback(url: string, platform: string) {
     const og = await scrapeOpenGraph(url);
     if (og.videoUrl) return { title: og.title, thumbnail: og.thumbnail, formats: [{ quality: 'HD', url: og.videoUrl, ext: 'mp4' }], source: 'native-pinterest' };
     if (og.html) {
+      const videoMatches = Array.from(new Set([
+        ...og.html.matchAll(/https:\/\/v\d?\.pinimg\.com\/videos\/[^"\\]+\.mp4[^"\\]*/gi),
+      ].map((match) => match[0])));
+      if (videoMatches.length) {
+        const formats: MediaFormat[] = videoMatches.map((mediaUrl) => {
+          const qualityMatch = mediaUrl.match(/\/(\d{3,4}p)\//i) || mediaUrl.match(/_t(\d+)/i);
+          const quality = qualityMatch?.[1]
+            ? qualityMatch[1].endsWith('p') ? qualityMatch[1].toUpperCase() : `Variant ${qualityMatch[1]}`
+            : 'HD';
+          return { quality, url: mediaUrl, ext: 'mp4' };
+        });
+        return { title: og.title || 'Pinterest Video', thumbnail: og.thumbnail, formats, source: 'native-pinterest' };
+      }
+
+      const hlsMatch = og.html.match(/https:\/\/v\d?\.pinimg\.com\/videos\/[^"\\]+\.m3u8[^"\\]*/i);
+      if (hlsMatch?.[0]) {
+        return { title: og.title || 'Pinterest Video', thumbnail: og.thumbnail, formats: [{ quality: 'HLS', url: hlsMatch[0], ext: 'm3u8' }], source: 'native-pinterest' };
+      }
+
       const jsonMatch = og.html.match(/{"__PWS_DATA__".*?}<\/script>/s) || og.html.match(/"video_list"\s*:\s*(\{[^}]+\})/);
       if (jsonMatch) {
         try {
