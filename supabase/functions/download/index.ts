@@ -1123,13 +1123,9 @@ Deno.serve(async (req) => {
   // We return a friendly 200 with `unsupported: true` instead of churning through every
   // extractor tier and returning a generic 500/422.
   const LIMITED_SUPPORT: Record<string, string> = {
-    hipi: 'Hipi is an app-only platform — its API requires a signed device token from the official mobile app, so public web extraction is not possible.',
-    chingari: 'Chingari is an app-only platform — its GraphQL API requires an in-app signed JWT, so links cannot be extracted from a web service.',
     afreecatv: 'AfreecaTV / SOOP content is region-locked to Korean IP addresses and most VODs require a Korean account login.',
     chzzk: 'CHZZK (Naver) requires Naver login cookies and serves HMAC-signed streams that are region-locked to Korea.',
-    vidio: 'Vidio premium content is protected by Widevine DRM and cannot be downloaded by any tool. Free clips often require an Indonesian account.',
     izlesene: 'Izlesene is protected by Cloudflare bot detection and is geo-restricted to Turkish IP addresses, so cloud servers are blocked.',
-    puhutv: 'PuhuTV episodes are protected by Widevine DRM and cannot be downloaded. Clips and trailers are geo-locked to Turkey.',
   };
   if (LIMITED_SUPPORT[platform]) {
     return new Response(JSON.stringify({

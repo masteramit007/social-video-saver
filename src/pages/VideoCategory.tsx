@@ -27,7 +27,7 @@ const VideoCategory: React.FC = () => {
   const faq = [
     { q: 'How do I download videos from social media?', a: 'Simply copy the video URL from any supported platform, paste it into our download widget, and click Download. We support 50+ video platforms.' },
     { q: 'Is it free to download videos?', a: 'Yes, our video downloader is completely free. No registration, no hidden fees, no subscriptions required.' },
-    { q: 'Can I download videos without watermark?', a: 'Yes! TikTok, Douyin, CapCut, Hipi, and Xiaohongshu videos can be downloaded without watermarks automatically.' },
+    { q: 'Can I download videos without watermark?', a: 'Yes! TikTok, Douyin, CapCut, and Xiaohongshu videos can be downloaded without watermarks automatically.' },
     { q: 'What video quality is available?', a: 'We provide the highest available quality, typically up to 1080p HD, depending on the original upload.' },
     { q: 'Do I need to install any software?', a: 'No installation needed. Our tool works entirely in your web browser on any device.' },
   ];
