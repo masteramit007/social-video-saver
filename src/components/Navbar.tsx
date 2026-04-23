@@ -74,11 +74,12 @@ const Navbar: React.FC = () => {
                   ))}
                   <Link to="/watermark-free-downloader" className="text-xs text-neon-cyan mt-2 block px-2">All Watermark-Free →</Link>
 
-                  <h4 className="text-xs font-bold text-neon-cyan mb-2 mt-4 font-orbitron">By Region</h4>
-                  <Link to="/download/china" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇨🇳 China ({chinaP.length})</Link>
-                  <Link to="/download/india" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇮🇳 India ({indiaP.length})</Link>
-                  <Link to="/download/russia" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇷🇺 Russia ({russiaP.length})</Link>
-                  <Link to="/download/korea" className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">🇰🇷 Korea ({koreaP.length})</Link>
+                  <h4 className="text-xs font-bold text-neon-cyan mb-2 mt-4 font-orbitron">By Region ({regionsWithCounts.length})</h4>
+                  {regionsWithCounts.map(r => (
+                    <Link key={r.id} to={`/download/${r.id}`} className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground px-2 py-1.5 rounded-lg hover:bg-foreground/5">
+                      {r.flag} {r.name} <span className="text-xs text-foreground/40">({r.count})</span>
+                    </Link>
+                  ))}
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-neon-cyan mb-2 font-orbitron">All Platforms ({allVideo.length})</h4>
