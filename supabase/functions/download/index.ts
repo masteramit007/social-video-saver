@@ -889,6 +889,7 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    ...(platform === 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
