@@ -28,8 +28,9 @@ const Navbar: React.FC = () => {
     setLangOpen(false);
   };
 
-  const popularVideo = getPopularVideoPlatforms().slice(0, 9);
+  const popularVideo = getPopularVideoPlatforms();
   const watermarkFree = getWatermarkFreePlatforms();
+  const allVideo = VIDEO_PLATFORMS;
   const chinaP = getVideoPlatformsByRegion('china');
   const indiaP = getVideoPlatformsByRegion('india');
   const russiaP = getVideoPlatformsByRegion('russia');
