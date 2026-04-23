@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VIDEO_PLATFORMS, AUDIO_PLATFORMS } from '@/data/platforms';
+import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getVideoPlatformsByRegion } from '@/data/platforms';
+import { REGIONS } from '@/data/regions';
 import { supportedLanguages } from '@/i18n';
 
 const Footer: React.FC = () => {
@@ -51,10 +52,16 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-orbitron text-sm font-bold mb-3 text-foreground/80">By Region</h4>
             <div className="flex flex-col gap-1">
-              <Link to="/download/china" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇨🇳 China Platforms</Link>
-              <Link to="/download/india" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇮🇳 India Platforms</Link>
-              <Link to="/download/russia" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🇷🇺 Russia Platforms</Link>
-              <Link to="/watermark-free-downloader" className="text-sm text-muted-foreground hover:text-foreground transition-colors">🌍 Watermark-Free Tools</Link>
+              {REGIONS.map(r => {
+                const count = getVideoPlatformsByRegion(r.id).length;
+                if (count === 0) return null;
+                return (
+                  <Link key={r.id} to={`/download/${r.id}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {r.flag} {r.name} <span className="text-xs text-muted-foreground/50">({count})</span>
+                  </Link>
+                );
+              })}
+              <Link to="/watermark-free-downloader" className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-1">🌍 Watermark-Free Tools</Link>
             </div>
           </div>
 

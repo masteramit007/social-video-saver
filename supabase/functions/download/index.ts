@@ -45,6 +45,13 @@ const PLATFORMS: Record<string, RegExp> = {
   clapper: /clapper\.com/,
   rumble: /rumble\.com/,
   bigo: /bigo\.tv|bigolive\.com/,
+  hipi: /hipi\.co\.in/,
+  chingari: /chingari\.io/,
+  afreecatv: /afreecatv\.com|sooplive\.com/,
+  chzzk: /chzzk\.naver\.com/,
+  vidio: /vidio\.com/,
+  izlesene: /izlesene\.com/,
+  puhutv: /puhutv\.com/,
 };
 
 function detectPlatform(url: string): string {
