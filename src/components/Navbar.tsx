@@ -182,6 +182,40 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-3">
+          {/* Search bar */}
+          <div ref={searchRef} className="relative">
+            <div className="flex items-center gap-2 glass border border-foreground/10 rounded-full px-3 py-1.5 w-56 focus-within:border-neon-cyan/50 transition-colors">
+              <Search className="w-3.5 h-3.5 text-foreground/50 flex-shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                onFocus={() => setSearchOpen(true)}
+                onKeyDown={handleSearchKey}
+                placeholder="Search platforms..."
+                className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none w-full"
+              />
+            </div>
+            {searchOpen && searchQuery.trim() && (
+              <div className="absolute right-0 top-full mt-2 glass rounded-xl border border-foreground/10 w-72 max-h-80 overflow-y-auto p-2 z-50">
+                {searchResults.length === 0 ? (
+                  <div className="text-sm text-foreground/50 px-3 py-2">No matches</div>
+                ) : searchResults.map((r, idx) => (
+                  <Link
+                    key={r.href}
+                    to={r.href}
+                    onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${idx === searchFocusIdx ? 'bg-foreground/10 text-foreground' : 'text-foreground/70 hover:bg-foreground/5'}`}
+                  >
+                    {r.flag ? <span>{r.flag}</span> : <span className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color }} />}
+                    <span className="flex-1">{r.name}</span>
+                    <span className="text-xs text-foreground/40">{r.type}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-foreground/70 hover:text-foreground">
               <Globe className="w-4 h-4" />
