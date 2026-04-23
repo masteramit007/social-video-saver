@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, X, Globe, ChevronDown } from 'lucide-react';
 import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getWatermarkFreePlatforms, getVideoPlatformsByRegion } from '@/data/platforms';
+import { REGIONS } from '@/data/regions';
 import { supportedLanguages } from '@/i18n';
 
 const musicIds = ['spotify','apple-music','soundcloud','deezer','tidal','bandcamp','audiomack'];
