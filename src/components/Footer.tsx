@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { VIDEO_PLATFORMS, AUDIO_PLATFORMS } from '@/data/platforms';
+import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getVideoPlatformsByRegion } from '@/data/platforms';
+import { REGIONS } from '@/data/regions';
 import { supportedLanguages } from '@/i18n';
 
 const Footer: React.FC = () => {
