@@ -32,10 +32,8 @@ const Navbar: React.FC = () => {
   const popularVideo = getPopularVideoPlatforms();
   const watermarkFree = getWatermarkFreePlatforms();
   const allVideo = VIDEO_PLATFORMS;
-  const chinaP = getVideoPlatformsByRegion('china');
-  const indiaP = getVideoPlatformsByRegion('india');
-  const russiaP = getVideoPlatformsByRegion('russia');
-  const koreaP = getVideoPlatformsByRegion('korea');
+  const regionsWithCounts = REGIONS.map(r => ({ ...r, count: getVideoPlatformsByRegion(r.id).length }))
+    .filter(r => r.count > 0);
 
   const musicPlatforms = AUDIO_PLATFORMS.filter(p => musicIds.includes(p.id));
   const podcastPlatforms = AUDIO_PLATFORMS.filter(p => podcastIds.includes(p.id));
