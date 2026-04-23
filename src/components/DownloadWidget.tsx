@@ -274,8 +274,26 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
         </div>
       )}
 
+      {/* Limited Support Card (login walls, DRM, geo-locked, app-only platforms) */}
+      {state === 'success' && (result as any)?.unsupported && (
+        <div className="mt-4 glass p-6 border border-yellow-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400 font-bold">⚠️ Limited Support</span>
+            <span className="text-xs text-muted-foreground capitalize">{result?.platform}</span>
+          </div>
+          <h3 className="font-orbitron text-lg mb-2 neon-text">{result?.title}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{(result as any)?.reason}</p>
+          <p className="text-xs text-muted-foreground/70 mb-4">
+            We can't reliably extract this platform from a cloud server. This is a platform restriction, not a bug — sorry about that!
+          </p>
+          <button onClick={reset} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+            <RefreshCw className="w-3 h-3" /> {t('result_new_download')}
+          </button>
+        </div>
+      )}
+
       {/* Success Result */}
-      {state === 'success' && result && result.platform !== 'youtube' && (
+      {state === 'success' && result && result.platform !== 'youtube' && !(result as any).unsupported && (
         <div className="mt-4 glass p-5">
           <div className="flex flex-col sm:flex-row gap-4">
             {result.thumbnail ? (
