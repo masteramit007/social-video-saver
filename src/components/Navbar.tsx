@@ -241,6 +241,37 @@ const Navbar: React.FC = () => {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="lg:hidden fixed inset-0 top-16 glass z-40 p-6 flex flex-col gap-4 overflow-y-auto">
+          {/* Mobile search */}
+          <div className="flex items-center gap-2 glass border border-foreground/10 rounded-full px-3 py-2">
+            <Search className="w-4 h-4 text-foreground/50 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKey}
+              placeholder="Search platforms..."
+              className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none w-full"
+            />
+          </div>
+          {searchQuery.trim() && (
+            <div className="glass rounded-xl border border-foreground/10 p-2 -mt-2">
+              {searchResults.length === 0 ? (
+                <div className="text-sm text-foreground/50 px-3 py-2">No matches</div>
+              ) : searchResults.map(r => (
+                <Link
+                  key={r.href}
+                  to={r.href}
+                  onClick={() => { setSearchQuery(''); setMenuOpen(false); }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground/70 hover:bg-foreground/5"
+                >
+                  {r.flag ? <span>{r.flag}</span> : <span className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color }} />}
+                  <span className="flex-1">{r.name}</span>
+                  <span className="text-xs text-foreground/40">{r.type}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+
           <Link to="/" onClick={() => setMenuOpen(false)} className="text-lg text-foreground/80 hover:text-foreground">{t('nav_home')}</Link>
           
           <div className="text-sm font-orbitron text-neon-cyan font-bold mt-2">📹 Video Platforms ({allVideo.length})</div>
