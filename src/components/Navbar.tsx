@@ -44,6 +44,44 @@ const Navbar: React.FC = () => {
   const podcastPlatforms = AUDIO_PLATFORMS.filter(p => podcastIds.includes(p.id));
   const regionalAudio = AUDIO_PLATFORMS.filter(p => regionalAudioIds.includes(p.id));
 
+  // Searchable index: video + audio platforms + regions
+  const searchIndex = useMemo(() => {
+    const items: Array<{ name: string; type: string; href: string; color?: string; flag?: string }> = [];
+    VIDEO_PLATFORMS.forEach(p => items.push({ name: p.name, type: 'Video', href: `/download/${p.slug}`, color: p.color }));
+    AUDIO_PLATFORMS.forEach(p => items.push({ name: p.name, type: 'Audio', href: `/audio/${p.slug}`, color: p.color }));
+    REGIONS.forEach(r => items.push({ name: r.name, type: 'Region', href: `/download/${r.id}`, flag: r.flag }));
+    return items;
+  }, []);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return searchIndex
+      .filter(i => i.name.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [searchQuery, searchIndex]);
+
+  useEffect(() => { setSearchFocusIdx(0); }, [searchQuery]);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSearchFocusIdx(i => Math.min(i + 1, searchResults.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setSearchFocusIdx(i => Math.max(i - 1, 0)); }
+    else if (e.key === 'Enter' && searchResults[searchFocusIdx]) {
+      navigate(searchResults[searchFocusIdx].href);
+      setSearchQuery(''); setSearchOpen(false); setMenuOpen(false);
+    } else if (e.key === 'Escape') { setSearchOpen(false); }
+  };
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass border-b border-foreground/5' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
