@@ -22,9 +22,6 @@ const Navbar: React.FC = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchFocusIdx, setSearchFocusIdx] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
-  const [audioOpen, setAudioOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
