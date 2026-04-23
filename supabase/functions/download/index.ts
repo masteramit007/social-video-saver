@@ -943,10 +943,14 @@ Deno.serve(async (req) => {
 
   const platform = detectPlatform(url);
   const layers = [
+    // For TikTok, TikWM is the most reliable extractor — try it first.
     ...(platform === 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'all-media-downloader', fn: () => tryAllMediaDownloader(url) },
     { name: 'social-download-aio', fn: () => trySocialDownloadAllInOne(url) },
     { name: 'auto-download-aio', fn: () => tryAutoDownloadAPI(url) },
+    // For non-TikTok platforms, use TikWM as a free fallback after paid RapidAPI layers
+    // but before Cobalt/native (it supports IG, FB, YouTube Shorts, X, Douyin, etc.).
+    ...(platform !== 'tiktok' ? [{ name: 'tikwm', fn: () => tryTikwm(url) }] : []),
     { name: 'cobalt', fn: () => tryCobaltAPI(url) },
     { name: 'yt-dlp-bridge', fn: () => tryYtDlpBridge(url) },
     { name: 'vidbee-bridge', fn: () => tryVidBeeBridge(url) },
