@@ -12,8 +12,16 @@ const regionalAudioIds = ['jiosaavn','gaana','zingmp3','nhaccuatui'];
 
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchFocusIdx, setSearchFocusIdx] = useState(0);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [audioOpen, setAudioOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
