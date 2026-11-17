@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from '@/lib/router-compat';
 import SEOHead from '@/components/SEOHead';
 import AdSlot from '@/components/AdSlot';
 import { blogPosts } from '@/pages/BlogIndex';

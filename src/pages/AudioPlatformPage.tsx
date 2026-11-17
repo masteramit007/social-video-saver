@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
 import AdSlot from '@/components/AdSlot';
