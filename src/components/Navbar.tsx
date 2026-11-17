@@ -193,7 +193,7 @@ const Navbar: React.FC = () => {
                 onFocus={() => setSearchOpen(true)}
                 onKeyDown={handleSearchKey}
                 placeholder="Search platforms..."
-                className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none w-full"
+                className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-hidden w-full"
               />
             </div>
             {searchOpen && searchQuery.trim() && (
@@ -250,7 +250,7 @@ const Navbar: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKey}
               placeholder="Search platforms..."
-              className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none w-full"
+              className="bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-hidden w-full"
             />
           </div>
           {searchQuery.trim() && (
