@@ -5,6 +5,7 @@ import { detectPlatformFromUrl, VIDEO_PLATFORMS, AUDIO_PLATFORMS, type Platform 
 import { supabase } from '@/integrations/supabase/client';
 import DownloadSuccessToast from './DownloadSuccessToast';
 import confetti from 'canvas-confetti';
+import { Button } from '@/components/ui/button';
 
 interface MediaFormat {
   quality: string;
@@ -197,6 +198,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
       <div className="glass p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           type="url"
+          aria-label="Video or audio URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleDownload()}
@@ -205,9 +207,9 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
           style={{ backdropFilter: 'none' }}
         />
         <div className="flex items-center gap-2">
-          <button onClick={handlePaste} className="glass p-3 hover:bg-foreground/5 transition-colors rounded-xl" title={t('paste_btn')}>
+          <Button variant="ghost" size="icon" onClick={handlePaste} aria-label={t('paste_btn')} className="glass min-h-11 min-w-11 p-3 hover:bg-foreground/5 transition-colors rounded-xl" title={t('paste_btn')}>
             <Clipboard className="w-5 h-5 text-foreground/60" />
-          </button>
+          </Button>
           <button onClick={handleDownload} className="neon-btn flex-1 sm:flex-none px-6 py-3.5 text-sm flex items-center justify-center gap-2 whitespace-nowrap" disabled={state === 'loading'}>
             <Download className="w-4 h-4" />
             {t('download_btn')}
