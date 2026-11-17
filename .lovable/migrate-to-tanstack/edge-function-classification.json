@@ -1,0 +1,4 @@
+{"functions": [
+  {"name": "download", "classification": "internal-only (project rule keeps it on the backend)", "signal": "called via supabase.functions.invoke in DownloadWidget; project rule: extraction runs as backend functions with rate limiting", "outcome": "left"},
+  {"name": "proxy-download", "classification": "custom response", "signal": "streams file bytes with Content-Disposition; hard-coded /functions/v1/proxy-download URL in DownloadWidget", "outcome": "left"}
+]}
