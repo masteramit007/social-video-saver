@@ -1,4 +1,5 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
+import { I18nextProvider } from "react-i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -6,6 +7,7 @@ import {
   Outlet,
   Scripts,
   useRouter,
+  useRouterState,
   Link,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
@@ -20,7 +22,7 @@ import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import appCss from "../styles.css?url";
 // ported from main.tsx / App.tsx — i18n setup runs once on import
-import "@/i18n";
+import i18n, { languageFromPath } from "@/i18n";
 
 const GTM_ID = "GTM-K5KK889N";
 
@@ -80,7 +82,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lang = languageFromPath(pathname);
+  // One i18n instance per language so concurrent server renders never share a language.
+  const i18nInstance = useMemo(() => i18n.cloneInstance({ lng: lang, initAsync: false }), [lang]);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  }, [lang]);
   return (
+    <I18nextProvider i18n={i18nInstance}>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <TooltipProvider>
@@ -95,6 +106,7 @@ function RootComponent() {
         </TooltipProvider>
       </HelmetProvider>
     </QueryClientProvider>
+    </I18nextProvider>
   );
 }
 
