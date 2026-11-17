@@ -336,7 +336,7 @@ const DownloadWidget: React.FC<DownloadWidgetProps> = ({ forcePlatform }) => {
           {/* Actions */}
           <div className="mt-4 flex items-center gap-3">
             {result.formats[0] && (
-              <button onClick={() => handleCopyLink(result.formats[0].url)}
+              <button onClick={() => handleCopyLink(result.formats[0]?.url ?? '')}
                 className="glass px-3 py-1.5 text-xs text-foreground/60 hover:text-foreground flex items-center gap-1 transition-colors">
                 <Copy className="w-3 h-3" />
                 {copied ? '✓ Copied' : t('result_copy_link')}

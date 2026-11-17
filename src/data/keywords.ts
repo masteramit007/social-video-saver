@@ -641,7 +641,7 @@ export function getPlatformSeoDescription(platformId: string, lang: string, type
   if (lang === 'en' || !lang) {
     return PLATFORM_KEYWORDS[platformId]?.seoDescription || '';
   }
-  const pattern = PSEO_META_PATTERNS[lang]?.[type] || PSEO_META_PATTERNS.en[type];
+  const pattern = PSEO_META_PATTERNS[lang]?.[type] || PSEO_META_PATTERNS['en']?.[type] || '';
   return pattern.replace(/{platform}/g, platformName);
 }
 

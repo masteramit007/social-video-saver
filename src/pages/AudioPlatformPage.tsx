@@ -201,7 +201,7 @@ const AudioPlatformPage: React.FC = () => {
 
           {blogLinks[platform.id] && (
             <div className="mt-6 glass p-4">
-              <Link to={blogLinks[platform.id]} className="text-sm text-neon-cyan hover:underline">
+              <Link to={blogLinks[platform.id] ?? '/blog'} className="text-sm text-neon-cyan hover:underline">
                 📖 Read our complete guide →
               </Link>
             </div>

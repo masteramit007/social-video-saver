@@ -411,7 +411,7 @@ const translations: Record<string, Record<string, string>> = {
 // Build resources with English fallback
 langs.forEach(lang => {
   resources[lang] = {
-    translation: { ...translations.en, ...translations[lang] }
+    translation: { ...translations['en'], ...translations[lang] }
   };
 });
 
