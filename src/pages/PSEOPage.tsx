@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
@@ -21,7 +21,8 @@ const PSEOPage: React.FC = () => {
     }
   }, [lang, i18n]);
 
-  const isAudioRoute = window.location.pathname.includes('/audio/');
+  const { pathname } = useLocation();
+  const isAudioRoute = pathname.includes('/audio/');
   const allPlatforms = isAudioRoute ? AUDIO_PLATFORMS : VIDEO_PLATFORMS;
   const platform = allPlatforms.find(p => p.slug === platformId || p.id === platformId);
 

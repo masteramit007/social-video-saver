@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getVideoPlatformsByRegion } from '@/data/platforms';
 import { REGIONS } from '@/data/regions';

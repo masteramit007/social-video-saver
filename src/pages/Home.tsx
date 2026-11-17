@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Zap, Shield, Smartphone, Download, Globe, Eye, Music, Headphones, Mic, Volume2 } from 'lucide-react';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';

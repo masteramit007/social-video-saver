@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import SEOHead from '@/components/SEOHead';
 import DownloadWidget from '@/components/DownloadWidget';
@@ -201,7 +201,7 @@ const AudioPlatformPage: React.FC = () => {
 
           {blogLinks[platform.id] && (
             <div className="mt-6 glass p-4">
-              <Link to={blogLinks[platform.id]} className="text-sm text-neon-cyan hover:underline">
+              <Link to={blogLinks[platform.id] ?? '/blog'} className="text-sm text-neon-cyan hover:underline">
                 📖 Read our complete guide →
               </Link>
             </div>

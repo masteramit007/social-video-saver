@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
 const resources: Record<string, { translation: Record<string, string> }> = {};
 
@@ -411,22 +410,26 @@ const translations: Record<string, Record<string, string>> = {
 // Build resources with English fallback
 langs.forEach(lang => {
   resources[lang] = {
-    translation: { ...translations.en, ...translations[lang] }
+    translation: { ...translations['en'], ...translations[lang] }
   };
 });
 
+// Language comes from the URL (/hi/download/…), resolved per render in __root.tsx via
+// languageFromPath(), so the server and browser always render the same language.
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
+    lng: 'en',
     fallbackLng: 'en',
+    initAsync: false,
     interpolation: { escapeValue: false },
-    detection: {
-      order: ['path', 'navigator'],
-      lookupFromPathIndex: 0,
-    },
   });
+
+export function languageFromPath(pathname: string): string {
+  const first = pathname.split('/')[1] ?? '';
+  return langs.includes(first) ? first : 'en';
+}
 
 export const supportedLanguages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
