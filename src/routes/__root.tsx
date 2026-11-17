@@ -88,7 +88,6 @@ function RootComponent() {
   const i18nInstance = useMemo(() => i18n.cloneInstance({ lng: lang, initAsync: false }), [lang]);
   useEffect(() => {
     document.documentElement.lang = lang;
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   }, [lang]);
   return (
     <I18nextProvider i18n={i18nInstance}>
