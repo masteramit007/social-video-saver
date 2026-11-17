@@ -5,6 +5,7 @@ import { Menu, X, Globe, ChevronDown, Search } from 'lucide-react';
 import { VIDEO_PLATFORMS, AUDIO_PLATFORMS, getPopularVideoPlatforms, getWatermarkFreePlatforms, getVideoPlatformsByRegion } from '@/data/platforms';
 import { REGIONS } from '@/data/regions';
 import { supportedLanguages } from '@/i18n';
+import { Button } from '@/components/ui/button';
 
 const musicIds = ['spotify','apple-music','soundcloud','deezer','tidal','bandcamp','audiomack'];
 const podcastIds = ['apple-podcasts','castbox','audioboom','acast','spreaker','simplecast'];
@@ -188,6 +189,7 @@ const Navbar: React.FC = () => {
               <Search className="w-3.5 h-3.5 text-foreground/50 flex-shrink-0" />
               <input
                 type="text"
+                aria-label="Search video, audio platforms and regions"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
@@ -217,9 +219,9 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="relative">
-            <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 text-sm text-foreground/70 hover:text-foreground">
+            <Button variant="ghost" size="icon" aria-label="Choose language" aria-expanded={langOpen} onClick={() => setLangOpen(!langOpen)} className="min-h-11 min-w-11 flex items-center gap-1 text-sm text-foreground/70 hover:text-foreground">
               <Globe className="w-4 h-4" />
-            </button>
+            </Button>
             {langOpen && (
               <div className="absolute right-0 top-full mt-2 glass p-2 max-h-64 overflow-y-auto min-w-[180px] rounded-xl border border-foreground/10">
                 {supportedLanguages.map(l => (
@@ -233,9 +235,9 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        <button className="lg:hidden text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
+        <Button variant="ghost" size="icon" aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menuOpen} className="lg:hidden min-h-11 min-w-11 text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        </Button>
       </div>
 
       {/* Mobile menu */}
@@ -246,6 +248,7 @@ const Navbar: React.FC = () => {
             <Search className="w-4 h-4 text-foreground/50 flex-shrink-0" />
             <input
               type="text"
+              aria-label="Search video, audio platforms and regions"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKey}

@@ -19,7 +19,7 @@ const DownloadSuccessToast: React.FC<DownloadSuccessToastProps> = ({ show, onClo
         <button
           onClick={onClose}
           className="absolute top-2 right-2 p-1.5 rounded-lg hover:bg-foreground/10 transition-colors"
-          aria-label="Close"
+          aria-label="Dismiss download notification"
         >
           <X className="w-4 h-4 text-foreground/50" />
         </button>

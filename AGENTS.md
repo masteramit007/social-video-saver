@@ -7,3 +7,5 @@
 - UI language is derived from the URL prefix (`languageFromPath`) with a per-render i18n clone in `__root.tsx`; no browser language detection. Why: server and browser must render identical text to avoid hydration errors.
 - Never add static `index.html` stubs under `public/`. Why: static files override server-rendered routes.
 - Code that touches `window`/`document`/`localStorage` must run inside effects or event handlers, never during render or at module scope. Why: pages render on the server too.
+- Contact messages use a public POST server function with shared schema validation and server-only inserts into contact_submissions; visitors have no table access. Why: anonymous contact must persist without exposing private messages.
+- The contact route owns its head metadata without SEOHead. Why: avoids duplicate metadata while using native route head management on this updated page.
