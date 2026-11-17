@@ -1,0 +1,15 @@
+{
+  "customizations": [
+    { "token": "neon/glass base color tokens (--background..--ring, --bg-base, --neon-*, --text-*)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--sidebar-* tokens", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--radius 1.25rem", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "font-sans / font-orbitron", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "neon-cyan/purple/pink/green colors", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "container utility (center, 2rem, 1400px)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "body/heading font base styles", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".glass / .glass-hover / .glass-input / .glass-shimmer", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".neon-text / .neon-text-purple / .neon-btn / .neon-spinner", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".bg-orbs / .orb-1..4 + float1..4 keyframes", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".noise-overlay / .glitch / scrollbar / RTL / shimmer keyframes", "source": "src/index.css", "reappliedIn": "src/styles.css" }
+  ]
+}
